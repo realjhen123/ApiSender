@@ -22,8 +22,7 @@
 #include <stdlib.h>
 #include <fstream>
 #define SUCCEED 1
-class jsonfile {
-public:
+namespace jsonfile {
 	static void writeFileFromString(const std::string filename, const std::string body) {
 		std::ofstream ofile(filename);
 		ofile << body;
