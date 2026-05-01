@@ -23,6 +23,7 @@
 #include <fstream>
 #define SUCCEED 1
 namespace jsonfile {
+	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
 		std::ofstream ofile(filename);
 		ofile << body;
@@ -53,7 +54,7 @@ namespace jsonfile {
 		bool isok = charread->parse(mystr.c_str(), mystr.c_str() + mystr.size(), &root, &strerr);
 		return root;
 	}
-	static std::string jsontoString(const Json::Value& json_val, std::string tap_ = "\t") {
+	static std::string jsontoString(const Json::Value& json_val, std::string tap_ = jsonfile::sep) {
 		Json::StreamWriterBuilder builder;
 		builder["emitUTF8"] = true;
 		builder["indentation"] = tap_;
@@ -73,11 +74,14 @@ namespace jsonfile {
 	static Json::Value parse(std::string str_) {
 		return jsonfile::readJsonFromString(str_);
 	}
+
 	static std::string parse(Json::Value json_) {
 		return jsonfile::jsontoString(json_);
 	}
+
 	//	static void writeJsonFile(const string filename)
 };
+
 class CurlClient {
 public:   
 	CURL* curl_;
@@ -105,6 +109,17 @@ public:
 		curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
 		curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, data.c_str());
 		curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
+		curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response);
+		CURLcode res = curl_easy_perform(curl_);
+		return (res == CURLE_OK);
+	}
+	bool Get(const std::string& url, std::string& response) {
+		if (!curl_) {
+			return false;
+		}
+		curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl_, CURLOPT_POST, 0L);
+		curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, &WriteCallback);
 		curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response);
 		CURLcode res = curl_easy_perform(curl_);
 		return (res == CURLE_OK);
@@ -142,6 +157,7 @@ int main()
 	std::string workfile = ".\\ApiSender\\ApiSender.txt" , workname;
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
+	jsonfile::sep = "  ";
 	std::cout << ">";
 	std::cin >> command_1;
 	Json::Value config;
@@ -191,6 +207,7 @@ int main()
 				config[command_2]["request"]["body"] = "";
 				config[command_2]["cookies"] = Json::nullValue;
 				config[command_2]["response"]["type"] = "commandline";
+				config[command_2]["method"] = "get";
 				basicconfig[workname][command_2] = "";
 			}
 			jsonfile::writeJsonFile(workfile,config);
@@ -215,15 +232,35 @@ int main()
 		else if (command_1 == "reload" || command_1 == "rl") {
 			config = jsonfile::readJsonFile(workfile);
 		}
-		else if (command_1 == "postgo" || command_1 == "send") {
-			if (working != "") {
-				cc.headers = nullptr;
-				std::vector<std::string> k = config[working]["request"]["header"].getMemberNames();
-				for (const auto& it : k) {
-					cc.addHeader(it + ": " + config[working]["request"]["header"][it].asString());
-				}
+		else if (command_1 == "run") {
+			if (working == "") {
+				std::cout << "Have not working" << std::endl;
+				command_1 = "";
+				command_2 = "";
+				command_3 = "";
+				command_4 = "";
+				std::cin >> command_1;
+				continue;
+			}
+			cc.headers = nullptr;
+			std::vector<std::string> k = config[working]["request"]["header"].getMemberNames();
+			for (const auto& it : k) {
+				cc.addHeader(it + ": " + config[working]["request"]["header"][it].asString());
+			}
+			std::string res;
+			if (config[working]["method"].asString() == "get" || config[working]["method"].asString() == "Get" || config[working]["method"].asString() == "GET") {
+				std::cout << "Url:" << config[working]["url"].asString() << std::endl
+					<< "Request Header: ";
+				cc.OutputReqHeaders();
+				std::cout << std::endl;
+				cc.Get(
+					config[working]["url"].asString(),
+					res
+				);
+
+			}
+			else if (config[working]["method"].asString() == "post" || config[working]["method"].asString() == "Post" || config[working]["method"].asString() == "POST") {
 				std::string req = config[working]["request"]["body"].isObject() ? jsonfile::parse(config[working]["request"]["body"]) : config[working]["request"]["body"].asString();
-				std::string res;
 				std::cout << "Url:" << config[working]["url"].asString() << std::endl
 					<< "Request Body:" << req << std::endl;
 				std::cout << "Request Header: ";
@@ -234,18 +271,15 @@ int main()
 					req,
 					res
 				);
-				if (config[working]["response"]["type"] == "commandline") {
-					std::cout << res << std::endl;
-				}
-				else {
-					std::ofstream out(config[working]["response"]["type"].asString(), std::ios::app);
-					out << "\n" << getReadableTime() << "\n";
-					out << res << "\n";
-					out.close();
-				}
+
+			}if (config[working]["response"]["type"] == "commandline") {
+				std::cout << res << std::endl;
 			}
 			else {
-				std::cout << "Havno't Working" << std::endl;
+				std::ofstream out(config[working]["response"]["type"].asString(), std::ios::app);
+				out << "\n" << getReadableTime() << "\n";
+				out << res << "\n";
+				out.close();
 			}
 		}
 		else if (command_1 == "debug") {
