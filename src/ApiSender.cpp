@@ -164,6 +164,7 @@ int main()
 	CurlClient cc;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
+			config = Json::nullValue;
 			std::cin >> command_2 >> command_3;
 			for (char c : command_2) {
 				if ((c < 65 || c>122) && c != 46 )std::abort();
@@ -172,8 +173,10 @@ int main()
 			config["."]["url"] = "";
 			config["."]["request"]["header"] = Json::nullValue;
 			config["."]["request"]["body"] = "";
+			config["."]["request"]["type"] = "get";
 			config["."]["cookies"] = Json::nullValue;
 			config["."]["response"]["type"] = "commandline";
+			config["."]["response"]["onJson"] = false;
 			basicconfig["ApiSender"]["introduction"] = "";
 			working = ".";
 			if (command_2 == ".") {
@@ -208,6 +211,7 @@ int main()
 				config[command_2]["cookies"] = Json::nullValue;
 				config[command_2]["response"]["type"] = "commandline";
 				config[command_2]["method"] = "get";
+				config[command_2]["response"]["onJson"] = false;
 				basicconfig[workname][command_2] = "";
 			}
 			jsonfile::writeJsonFile(workfile,config);
@@ -249,15 +253,26 @@ int main()
 			}
 			std::string res;
 			if (config[working]["method"].asString() == "get" || config[working]["method"].asString() == "Get" || config[working]["method"].asString() == "GET") {
-				std::cout << "Url:" << config[working]["url"].asString() << std::endl
+				std::string req;
+				if (config[working]["request"]["body"].isObject()) {
+					req = "?";
+					std::vector<std::string> k = config[working]["request"]["body"].getMemberNames();
+					for (const auto& it : k){
+						req += it;
+						req += "=";
+						req += config[working]["request"]["body"][it].asString();
+						req += "&";
+					}
+					req = req.substr(0,req.size() - 1);
+				}
+				std::cout << "Url:" << config[working]["url"].asString() + req<< std::endl
 					<< "Request Header: ";
 				cc.OutputReqHeaders();
 				std::cout << std::endl;
 				cc.Get(
-					config[working]["url"].asString(),
+					config[working]["url"].asString() + req,
 					res
 				);
-
 			}
 			else if (config[working]["method"].asString() == "post" || config[working]["method"].asString() == "Post" || config[working]["method"].asString() == "POST") {
 				std::string req = config[working]["request"]["body"].isObject() ? jsonfile::parse(config[working]["request"]["body"]) : config[working]["request"]["body"].asString();
@@ -272,13 +287,22 @@ int main()
 					res
 				);
 
-			}if (config[working]["response"]["type"] == "commandline") {
+			}
+			if (config[working]["response"]["type"] == "commandline") {
 				std::cout << res << std::endl;
+			}
+			else if (config[working]["response"]["type"] == "json") {
+				std::cout << jsonfile::parse(res);
 			}
 			else {
 				std::ofstream out(config[working]["response"]["type"].asString(), std::ios::app);
 				out << "\n" << getReadableTime() << "\n";
-				out << res << "\n";
+				if (config[working]["response"]["onJson"].asBool()) {
+					out << jsonfile::parse(res) << "\n";
+				}
+				else {
+					out << res << "\n";
+				}
 				out.close();
 			}
 		}
