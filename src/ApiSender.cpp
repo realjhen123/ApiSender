@@ -151,6 +151,7 @@ static std::string getReadableTime() {
 	return std::string(buf);
 }
 static void showBanner(std::string workspace_, std::string working_) {
+	if (!ui)return;
 	std::cout << "workspace:\t" << workspace_ << std::endl
 		<< "working:\t" << working_ << std::endl
 		<< "=====Apisender=====" << std::endl;
@@ -171,7 +172,7 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 			<< "---request----" << std::endl
 			<< "header:" << jsonfile::parse(c_[working_]["header"]) << std::endl
 			<< "body:" << jsonfile::parse(c_[working_]["request"]["body"]) << std::endl
-			<< "---respons---" << std::endl
+			<< "---response---" << std::endl
 			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
 		jsonfile::sep = "\t";
 	}
