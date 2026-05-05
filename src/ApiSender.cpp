@@ -196,7 +196,7 @@ int main()
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
 	jsonfile::sep = "  ";
-	if (!basicconfig["personal"]["ui"].asBool())ui = false;
+	if ((!basicconfig["personal"]["ui"].asBool()) && basicconfig["personal"]["ui"].isBool())ui = false;
 	showBanner(workname, working);
 	std::cout << ">";
 	std::cin >> command_1;
@@ -430,7 +430,7 @@ int main()
 	if (working != "" && workname != "") {
 		basicconfig["personal"]["u"]["working"] = working;
 		basicconfig["personal"]["u"]["workspace"] = workname;
-		jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
 	}	
+	jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
 	return 0;
 }
