@@ -197,6 +197,7 @@ int main()
 	Json::Value basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
 	jsonfile::sep = "  ";
 	if ((!basicconfig["personal"]["ui"].asBool()) && basicconfig["personal"]["ui"].isBool())ui = false;
+	else if (!basicconfig["personal"]["ui"].isBool()) { basicconfig["personal"]["ui"] = true; ui = true };
 	showBanner(workname, working);
 	std::cout << ">";
 	std::cin >> command_1;
