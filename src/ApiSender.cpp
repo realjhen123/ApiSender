@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <fstream>
 #define SUCCEED 1
+bool ui = true;
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -81,7 +82,6 @@ namespace jsonfile {
 
 	//	static void writeJsonFile(const string filename)
 };
-
 class CurlClient {
 public:   
 	CURL* curl_;
@@ -150,14 +150,53 @@ static std::string getReadableTime() {
 	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &localTime);
 	return std::string(buf);
 }
+static void showBanner(std::string workspace_, std::string working_) {
+	std::cout << "workspace:\t" << workspace_ << std::endl
+		<< "working:\t" << working_ << std::endl
+		<< "=====Apisender=====" << std::endl;
+}
+static void showBanner(std::string workspace_,std::string working_ , Json::Value c_){
+	if (!ui)return;
+	std::cout << "workspace:\t" << workspace_ << std::endl
+		<< "working:\t" << working_ << std::endl
+		<< "===================" << std::endl;
+	std::cout << "work: " << std::endl;
+	std::vector<std::string> c = c_.getMemberNames();
+	for (const auto& it : c)std::cout << it << " ";
+	if (c_[working_].isObject()) {
+		jsonfile::sep = "";
+		std::cout << "\n===================" << std::endl;
+		std::cout << "url:" << c_[working_]["url"].asString() << std::endl
+			<< "method: " << c_[working_]["method"].asString() << std::endl
+			<< "---request----" << std::endl
+			<< "header:" << jsonfile::parse(c_[working_]["header"]) << std::endl
+			<< "body:" << jsonfile::parse(c_[working_]["request"]["body"]) << std::endl
+			<< "---respons---" << std::endl
+			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
+		jsonfile::sep = "\t";
+	}
+	std::cout << "\n=====Apisender=====" << std::endl;
+}
+static void clearMonitor() {
+	if (!ui)return;
+#ifdef _WIN32
+	system("cls");
+#else 
+	system("clear");
+#endif
+}
 int main()
 {
+	system("title Apisender");
 	system("mkdir ApiSender");
+	clearMonitor();
 	std::string command_1, command_2, command_3, command_4;
 	std::string workfile = ".\\ApiSender\\ApiSender.txt" , workname;
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
 	jsonfile::sep = "  ";
+	if (!basicconfig["personal"]["ui"].asBool())ui = false;
+	showBanner(workname, working);
 	std::cout << ">";
 	std::cin >> command_1;
 	Json::Value config;
@@ -177,20 +216,23 @@ int main()
 			config["."]["cookies"] = Json::nullValue;
 			config["."]["response"]["type"] = "commandline";
 			config["."]["response"]["onJson"] = false;
-			basicconfig["ApiSender"]["introduction"] = "";
+			basicconfig["Apis"]["ApiSender"]["introduction"] = "";
 			working = ".";
 			if (command_2 == ".") {
 				workfile = ".\\ApiSender\\ApiSender.txt";
 				workname = "ApiSender";
-				basicconfig["ApiSender"]["introduction"] = command_3;
+				basicconfig["Apis"]["ApiSender"]["introduction"] = command_3;
 			}
 			else {
 				workfile = ".\\ApiSender\\" + command_2 + ".txt";
 				workname = command_2;
-				basicconfig[command_2]["introduction"] = command_3;
+				basicconfig["Apis"][command_2]["introduction"] = command_3;
 			}
 			jsonfile::writeJsonFile(workfile, config);
 			jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
+
+			clearMonitor();
+			showBanner(workname, working,config);
 		}
 		else if (command_1 == "set") {
 #ifdef _WIN32
@@ -199,6 +241,9 @@ int main()
 			system((std::string("vim ") + workfile).c_str());
 #endif
 			config = jsonfile::readJsonFile(workfile);
+
+			clearMonitor();
+			showBanner(workname, working, config);
 		}
 		else if (command_1 == "switch" || command_1 == "sw") {
 			config = jsonfile::readJsonFile(workfile);
@@ -212,10 +257,13 @@ int main()
 				config[command_2]["response"]["type"] = "commandline";
 				config[command_2]["method"] = "get";
 				config[command_2]["response"]["onJson"] = false;
-				basicconfig[workname][command_2] = "";
+				basicconfig["Apis"][workname][command_2] = "";
 			}
 			jsonfile::writeJsonFile(workfile,config);
 			jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
+
+			clearMonitor();
+			showBanner(workname, working, config);
 		}
 		else if (command_1 == "load" || command_1 == "l" || command_1 == "spaceload" || command_1 == "loadspace") {
 			std::cin >> command_2;
@@ -232,9 +280,15 @@ int main()
 				workname = command_2;
 			}
 			config = jsonfile::readJsonFile(workfile);
+
+			clearMonitor();
+			showBanner(workname, working, config);
 		}
 		else if (command_1 == "reload" || command_1 == "rl") {
 			config = jsonfile::readJsonFile(workfile);
+
+			clearMonitor();
+			showBanner(workname, working, config);
 		}
 		else if (command_1 == "run") {
 			if (working == "") {
@@ -309,9 +363,9 @@ int main()
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
 			std::cout << "workspace:" << workname << std::endl;
-			std::cout << "introduction:" << basicconfig[workname].get("introduction", "") << std::endl;
+			std::cout << "introduction:" << basicconfig["Apis"][workname].get("introduction", "") << std::endl;
 			std::cout << "working:" << working << std::endl;
-			std::cout << "introduction:" << basicconfig[workname].get(working, "") << std::endl;
+			std::cout << "introduction:" << basicconfig["Apis"][workname].get(working, "") << std::endl;
 			std::cout << "workspace:=====" << std::endl;
 			std::cout << jsonfile::jsontoString(basicconfig, "  ") << std::endl;
 			std::cout << "working:======="<<std::endl;
@@ -319,7 +373,8 @@ int main()
 		}
 		else if (command_1 == "space") {
 			basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
-			std::vector<std::string> b = basicconfig.getMemberNames();
+			Json::Value apis = basicconfig["Apis"];
+			std::vector<std::string> b = apis.getMemberNames();
 			for (const auto& it : b)std::cout << it << " ";
 			std::cout << std::endl;
 		}
@@ -327,6 +382,14 @@ int main()
 			std::vector<std::string> c = config.getMemberNames();
 			for (const auto& it : c)std::cout << it << " ";
 			std::cout << std::endl;
+		}
+		else if (command_1 == "ui") {
+			std::cin >> command_2;
+			if (command_2 == "on")ui = true;
+			else ui = false;
+			basicconfig["personal"]["ui"] = ui;
+			clearMonitor();
+			showBanner(workname, working, config);
 		}
 		else if (command_1 == "this") {
 			std::cout << "workspace:" << workname << std::endl;
@@ -336,6 +399,26 @@ int main()
 			std::cout << "working:=======" << std::endl;
 			std::cout << jsonfile::jsontoString(config[working], "  ") << std::endl;
 		}
+		else if (command_1 == "u") {
+			working = basicconfig["personal"]["u"]["working"].asString();
+			workname = basicconfig["personal"]["u"]["workspace"].asString();
+			command_2 = workname;
+			for (char c : command_2) {
+				if ((c < 65 || c>122) && c != 46)std::abort();
+				else if (c > 90 && c < 97 && c != 95)std::abort();
+			}
+			if (command_2 == ".") {
+				workfile = ".\\ApiSender\\ApiSender.txt";
+				workname = "ApiSender";
+			}
+			else {
+				workfile = ".\\ApiSender\\" + command_2 + ".txt";
+				workname = command_2;
+			}
+			config = jsonfile::readJsonFile(workfile);
+			clearMonitor();
+			showBanner(workname, working, config);
+		}
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
@@ -343,5 +426,10 @@ int main()
 		std::cout << ">";
 		std::cin >> command_1;
 	}
+	if (working != "" && workname != "") {
+		basicconfig["personal"]["u"]["working"] = working;
+		basicconfig["personal"]["u"]["workspace"] = workname;
+		jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
+	}	
 	return 0;
 }
