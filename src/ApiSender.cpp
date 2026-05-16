@@ -20,6 +20,7 @@
 #include <curl/curl.h>
 #include "json/json.h"
 #include <stdlib.h>
+#include <ctime>
 #include <fstream>
 #define SUCCEED 1
 bool ui = true;
@@ -192,9 +193,9 @@ int main()
 	system("mkdir ApiSender");
 	clearMonitor();
 	std::string command_1, command_2, command_3, command_4;
-	std::string workfile = ".\\ApiSender\\ApiSender.txt" , workname;
+	std::string workfile = "./ApiSender/ApiSender.txt" , workname;
 	std::string working;
-	Json::Value basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
+	Json::Value basicconfig = jsonfile::readJsonFile("./ApiSender/config.json");
 	jsonfile::sep = "  ";
 	if ((!basicconfig["personal"]["ui"].asBool()) && basicconfig["personal"]["ui"].isBool())ui = false;
 	else if (!basicconfig["personal"]["ui"].isBool()) { basicconfig["personal"]["ui"] = true; ui = true; };
@@ -221,17 +222,17 @@ int main()
 			basicconfig["Apis"]["ApiSender"]["introduction"] = "";
 			working = ".";
 			if (command_2 == ".") {
-				workfile = ".\\ApiSender\\ApiSender.txt";
+				workfile = "./ApiSender/ApiSender.txt";
 				workname = "ApiSender";
 				basicconfig["Apis"]["ApiSender"]["introduction"] = command_3;
 			}
 			else {
-				workfile = ".\\ApiSender\\" + command_2 + ".txt";
+				workfile = "./ApiSender/" + command_2 + ".txt";
 				workname = command_2;
 				basicconfig["Apis"][command_2]["introduction"] = command_3;
 			}
 			jsonfile::writeJsonFile(workfile, config);
-			jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
+			jsonfile::writeJsonFile("./ApiSender/config.json", basicconfig);
 
 			clearMonitor();
 			showBanner(workname, working,config);
@@ -262,7 +263,7 @@ int main()
 				basicconfig["Apis"][workname][command_2] = "";
 			}
 			jsonfile::writeJsonFile(workfile,config);
-			jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
+			jsonfile::writeJsonFile("./ApiSender/config.json", basicconfig);
 
 			clearMonitor();
 			showBanner(workname, working, config);
@@ -274,11 +275,11 @@ int main()
 				else if (c > 90 && c < 97 && c != 95)std::abort();
 			}
 			if (command_2 == ".") {
-				workfile = ".\\ApiSender\\ApiSender.txt";
+				workfile = "./ApiSender/ApiSender.txt";
 				workname = "ApiSender";
 			}
 			else {
-				workfile = ".\\ApiSender\\" + command_2 + ".txt";
+				workfile = "./ApiSender/" + command_2 + ".txt";
 				workname = command_2;
 			}
 			config = jsonfile::readJsonFile(workfile);
@@ -363,7 +364,7 @@ int main()
 			}
 		}
 		else if (command_1 == "debug") {
-			basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
+			basicconfig = jsonfile::readJsonFile("./ApiSender/config.json");
 			std::cout << "workspace:" << workname << std::endl;
 			std::cout << "introduction:" << basicconfig["Apis"][workname].get("introduction", "") << std::endl;
 			std::cout << "working:" << working << std::endl;
@@ -374,7 +375,7 @@ int main()
 			std::cout << jsonfile::jsontoString(config,"  ") << std::endl;
 		}
 		else if (command_1 == "space") {
-			basicconfig = jsonfile::readJsonFile(".\\ApiSender\\config.json");
+			basicconfig = jsonfile::readJsonFile("./ApiSender/config.json");
 			Json::Value apis = basicconfig["Apis"];
 			std::vector<std::string> b = apis.getMemberNames();
 			for (const auto& it : b)std::cout << it << " ";
@@ -410,11 +411,11 @@ int main()
 				else if (c > 90 && c < 97 && c != 95)std::abort();
 			}
 			if (command_2 == ".") {
-				workfile = ".\\ApiSender\\ApiSender.txt";
+				workfile = "./ApiSender/ApiSender.txt";
 				workname = "ApiSender";
 			}
 			else {
-				workfile = ".\\ApiSender\\" + command_2 + ".txt";
+				workfile = "./ApiSender/" + command_2 + ".txt";
 				workname = command_2;
 			}
 			config = jsonfile::readJsonFile(workfile);
@@ -432,6 +433,6 @@ int main()
 		basicconfig["personal"]["u"]["working"] = working;
 		basicconfig["personal"]["u"]["workspace"] = workname;
 	}	
-	jsonfile::writeJsonFile(".\\ApiSender\\config.json", basicconfig);
+	jsonfile::writeJsonFile("./ApiSender/config.json", basicconfig);
 	return 0;
 }

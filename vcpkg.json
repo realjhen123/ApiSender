@@ -1,0 +1,5 @@
+{
+  "name": "apisender",
+  "version": "1.0.0",
+  "dependencies": ["curl"]
+}
