@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
 
-# 探测 vcpkg（只记路径，不设 toolchain）
 find_program(VCPKG_EXE vcpkg
     PATHS "$ENV{VCPKG_ROOT}" "$ENV{USERPROFILE}/vcpkg"
 )
@@ -14,13 +13,11 @@ project(ApiSender VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# jsoncpp — 本地源码，零依赖
 add_library(jsoncpp_lib STATIC
     include/jsoncpp/jsoncpp.cpp
 )
 target_include_directories(jsoncpp_lib PUBLIC include/jsoncpp)
 
-# curl — 优先系统包，找不到再用 vcpkg
 find_package(CURL QUIET)
 if(NOT CURL_FOUND AND VCPKG_ROOT)
     message(STATUS "System curl not found, trying vcpkg...")
@@ -30,9 +27,9 @@ if(NOT CURL_FOUND AND VCPKG_ROOT)
     )
     if(_vcpkg_installed)
         list(GET _vcpkg_installed 0 _cfg)
-        cmake_path(GET _cfg PARENT_PATH _share)     # .../share/curl
-        cmake_path(GET _share PARENT_PATH _share)    # .../share
-        cmake_path(GET _share PARENT_PATH _prefix)   # .../installed/<triplet>
+        cmake_path(GET _cfg PARENT_PATH _share)     
+        cmake_path(GET _share PARENT_PATH _share)    
+        cmake_path(GET _share PARENT_PATH _prefix)   
         set(CMAKE_PREFIX_PATH "${_prefix}")
         find_package(curl CONFIG REQUIRED)
     else()
