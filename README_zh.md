@@ -1,7 +1,7 @@
 # ApiSender
 一个极为轻量的API开发工具, 使用libcurl
 
-#### language [[English]](https://github.com/realjhen123/apisender/README.md) [[中文]](https://github.com/realjhen123/apisender/README_zh.md)
+#### language [[English]](https://github.com/realjhen123/ApiSender/blob/main/README.md) [[中文]](https://github.com/realjhen123/ApiSender/blob/main/README_zh.md)
 
 ## 如何使用
 1. 下载

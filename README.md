@@ -1,7 +1,7 @@
 # ApiSender
 Very Lite API Development tools power by libcurl
 
-#### language [[English]](https://github.com/realjhen123/apisender/README.md) [[中文]](https://github.com/realjhen123/apisender/README_zh.md)
+#### language [[English]](https://github.com/realjhen123/ApiSender/blob/main/README.md) [[中文]](https://github.com/realjhen123/ApiSender/blob/main/README_zh.md)
 
 ## Using
 1. Download
