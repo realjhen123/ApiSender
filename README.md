@@ -1,22 +1,85 @@
 # ApiSender
 Very Lite API Development tools power by libcurl
-# How to Use?
+
+#### language [[English]](https://github.com/realjhen123/apisender/README.md) [[中文]](https://github.com/realjhen123/apisender/README_zh.md)
+
+## Using
+1. Download
+   
+    On **[Github Release](https://github.com/realjhen123/ApiSender/releases/)**
+2. Run
+
+    Apisender will make a folder so as to save configuration file.
+    > The config.json file has index and personal configuration, .txt file use for save Api configuration
+3. Use
+   
+    Using `init . .` Create a defalut config, workspace is . and file is Apisender.txt<br>
+    or `init <workspace> <Introduction>` Save in other file.
+
+    Using `sw <working> or switch <working>` to switch working.
+
+    Using `l <workspace> or load <workspace>` to load a workspace.
+
+    Using `set` to set up.
+    |Windows|Linux|
+    |-|-|
+    |Notepad.exe|vim|
+
+    Find your working<br>
+    For example,working **testing**
+    ```json
+    {
+        "testing":{
+            "method": "post",
+            "request":{
+                "header":{
+                    "Accept": "text/html,application/json",
+                    "Cache-Control": "no-cache",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                    "Host": "example.com:8080"
+                },
+                "body":{
+                    "example": "str",
+                    "a":"b"
+                }
+            },
+            "response":{
+                "onJson":false,
+                "type":"a.txt"
+            },
+            "url":"http://example.com"
+        }
+    }
+    ```
+    If response type = commandline,output will appear in command-line,In Case of filename,output will append on file<br>
+    Response onJson can parse the json<br>
+    Pay a attention, If request body is a string, It will send a Original string<br>
+
+    When the method is get, url's query can write on request body with json, Apisender will parse<br>
+    > replace the space with '%20'
+
+    Using `run`
+
+    Using `c` `cls` or `clear` to clean the monitor.
+
+    Using `ui on` to enable ui, `ui off` to disable ui.
+
+    Using `u` to load last time used.
+    
+## Compilation
+```bash
+git clone https://github.com/realjhen123/apisender.git && cd Apisender
+mkdir build && cd build
+cmake ..
+make -j12
 ```
-init/i <workspace> <introduction for the workspace>
-loadspace/l <space>
-switch/sw <work>
-set --- On Notepad.txt or vim.
-run
-```
-Body is a **string** or a **Json Object**.
-Header must be a **Json Object**
-Cookies will can be used **later** Not support Now.
-> Pay Attention, the normal working is '.'  
-> You Can change the <workspace>, response[type] can be a filename to **output** on it.  
-# Where am i?
-## New UI Can be Used just `ui on`
-using `work` or `space` to check.
-using `this` can show the this API, that will be sent.
-### You Can add some Introduction
-If you Want, In config.json
-> but i think tried and boring.
+### dependencies
+[libcurl](https://github.com/curl/curl)
+> By vcpkg `vcpkg install curl` or apt `sudo apt install libcurl-dev`
+
+## About This Project
+A better testing for develop api.<br>
+There some resaon that I make is software.
+1. Postcat is Using too much memory for me
+2. What f**k is Apifox?
+3. Curl's Command-line works strangely on Windows.

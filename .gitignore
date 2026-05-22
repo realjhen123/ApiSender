@@ -76,3 +76,5 @@ x64/
 *.filters
 *.user
 head/
+test/
+.vscode/
