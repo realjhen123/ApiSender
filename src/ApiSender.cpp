@@ -17,7 +17,7 @@
 */
 #ifndef APISENDER_PATH
 	#ifdef _WIN32
-		#define APISENDER_PATH "%UserProfile%/.ApiSender"
+		#define APISENDER_PATH "%UserProfile%\\.ApiSender"
 	#elif __linux__
 		#define APISENDER_PATH "~/.Apisender"
 	#endif
