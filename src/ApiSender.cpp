@@ -16,11 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #ifndef APISENDER_PATH
-	#ifdef _WIN32
-		#define APISENDER_PATH "%UserProfile%\\.ApiSender"
-	#elif __linux__
-		#define APISENDER_PATH "~/.Apisender"
-	#endif
+	#define APISENDER_PATH ".ApiSender"
 #endif
 #include <iostream>
 #include <map>
