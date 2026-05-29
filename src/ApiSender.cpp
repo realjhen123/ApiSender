@@ -1,6 +1,6 @@
 ﻿/*
 	src/ApiSender.cpp
-	Copyright (C) <2026 realjhen123
+	Copyright (C) 2026 realjhen123
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published
@@ -16,7 +16,11 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #ifndef APISENDER_PATH
-#define APISENDER_PATH ".ApiSender"
+	#ifdef _WIN32
+		#define APISENDER_PATH "%UserProfile%/.ApiSender"
+	#elif __linux__
+		#define APISENDER_PATH "~/.Apisender"
+	#endif
 #endif
 #include <iostream>
 #include <map>
