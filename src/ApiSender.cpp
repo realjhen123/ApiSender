@@ -351,6 +351,7 @@ int main()
 
 			}
 			if (config[working]["response"]["type"] == "commandline") {
+                std::cout << "Response:" << std::endl;
 				std::cout << res << std::endl;
 			}
 			else if (config[working]["response"]["type"] == "json") {
@@ -367,6 +368,7 @@ int main()
 				}
 				out.close();
 			}
+            std::cout << "====================" << std::endl;
 		}
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
