@@ -577,7 +577,7 @@ int main()
 
 				}
 				else if (command_2_1 == "stop") {
-					threads.swap(std::vector<std::thread>());
+					threads.clear();
 					thread_top = 0;
 					stress.status = false;
 					status = false;
