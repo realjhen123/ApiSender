@@ -247,6 +247,7 @@ namespace apisender {
 			}
 		}
 		void runPerSecond() {
+			
 			while (status) {
 				{
 					std::lock_guard<std::mutex> guard(this->mtx);
