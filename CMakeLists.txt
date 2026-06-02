@@ -49,5 +49,5 @@ elseif(NOT CURL_FOUND)
     )
 endif()
 
-add_executable(ApiSender src/ApiSender.cpp)
+add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h)
 target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib)

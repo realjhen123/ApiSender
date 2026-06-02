@@ -15,6 +15,10 @@
 	You should have received a copy of the GNU Affero General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+#include "OptionalFeatures.h"
+
+
 #ifndef APISENDER_PATH
 	#define APISENDER_PATH ".ApiSender"
 #endif
@@ -25,9 +29,17 @@
 #include <stdlib.h>
 #include <ctime>
 #include <fstream>
+#include <thread>
+#include <future>
+#include <vector>
+#include <queue>
+#include <mutex>
+#include <chrono>
+#include <unordered_map>
 #define SUCCEED 1
 
 bool ui = true;
+
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -88,7 +100,7 @@ namespace jsonfile {
 	//	static void writeJsonFile(const string filename)
 };
 class CurlClient {
-public:   
+public:  
 	CURL* curl_;
 	struct curl_slist* headers = nullptr;
 
@@ -155,6 +167,99 @@ static std::string getReadableTime() {
 	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &localTime);
 	return std::string(buf);
 }
+namespace apisender {
+#ifdef APISENDER_STRESS_TESTING
+	enum LogType {
+		NONE,
+		TRACE,
+		DEBUG,
+		INFO,
+		WARN,
+		FATAL
+	};
+	class Logger {
+	private:
+		std::mutex mtx;
+		std::queue<std::string> list;
+		std::unordered_map<apisender::LogType, std::string> LT_;
+	public:
+		Logger() {
+			LT_[apisender::LogType::DEBUG] = "[DEBUG]";
+			LT_[apisender::LogType::TRACE] = "[TRACE]";
+			LT_[apisender::LogType::INFO] = "[INFO]";
+			LT_[apisender::LogType::WARN] = "[WARN]";
+			LT_[apisender::LogType::FATAL] = "[FATAL]";
+		}
+		bool status = true;
+		LogType logtype = apisender::INFO;
+		void log(apisender::LogType logtype_, std::string str) {
+			std::lock_guard<std::mutex> guard(this->mtx);
+			if (logtype_ <= logtype)this->list.push(LT_[logtype_] + " " + (std::string)str);
+		}
+		void printfunction() {
+			while (status) {
+				{
+					std::lock_guard<std::mutex> guard(this->mtx);
+					while (!this->list.empty()) {
+						std::cout  << list.front() ;
+						std::cout.flush();
+						this->list.pop();
+					}
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			}
+		}
+	};
+	class stress_testing {
+	public:
+		bool status = true;
+		Json::Value config;
+		int workers_number = 10;
+		apisender::Logger log;
+		std::mutex mtx;
+		int count = 0;
+		stress_testing() {
+			this->config = jsonfile::readJsonFile(APISENDER_PATH "/stress.json");
+		}
+		void save() {
+			jsonfile::writeJsonFile(APISENDER_PATH "/stress.json", this->config);
+		}
+		void RunF(std::string working) {
+			std::string request;
+			if (this->config[working]["request"].isObject())request = jsonfile::parse(this->config[working]["request"]);
+			else this->config[working]["request"].asString();
+			std::string url = this->config[working]["url"].asString();
+			CURL* curl_ = curl_easy_init();
+			std::string response;
+			curl_global_init(CURL_GLOBAL_ALL);
+			curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
+			curl_easy_setopt(curl_, CURLOPT_POST, 1L);
+			curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, request.c_str());
+			curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
+			curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response);
+			while (status) {
+				curl_easy_perform(curl_);
+				{ 
+					std::lock_guard<std::mutex> guard(this->mtx);
+					this->count++;
+				}
+				response = "";
+			}
+		}
+		void runPerSecond() {
+			while (status) {
+				{
+					std::lock_guard<std::mutex> guard(this->mtx);
+					this->log.log(apisender::INFO, getReadableTime() + "\t" + "\tcount:" + std::to_string(this->count) + "\n");
+					this->count = 0;
+				}
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
+		}
+	};
+#endif
+}
+
 static void showBanner(std::string workspace_, std::string working_) {
 	if (!ui)return;
 	std::cout << "workspace:\t" << workspace_ << std::endl
@@ -319,15 +424,15 @@ int main()
 				if (config[working]["request"]["body"].isObject()) {
 					req = "?";
 					std::vector<std::string> k = config[working]["request"]["body"].getMemberNames();
-					for (const auto& it : k){
+					for (const auto& it : k) {
 						req += it;
 						req += "=";
 						req += config[working]["request"]["body"][it].asString();
 						req += "&";
 					}
-					req = req.substr(0,req.size() - 1);
+					req = req.substr(0, req.size() - 1);
 				}
-				std::cout << "Url:" << config[working]["url"].asString() + req<< std::endl
+				std::cout << "Url:" << config[working]["url"].asString() + req << std::endl
 					<< "Request Header: ";
 				cc.OutputReqHeaders();
 				std::cout << std::endl;
@@ -351,7 +456,7 @@ int main()
 
 			}
 			if (config[working]["response"]["type"] == "commandline") {
-                std::cout << "Response:" << std::endl;
+				std::cout << "Response:" << std::endl;
 				std::cout << res << std::endl;
 			}
 			else if (config[working]["response"]["type"] == "json") {
@@ -368,7 +473,7 @@ int main()
 				}
 				out.close();
 			}
-            std::cout << "====================" << std::endl;
+			std::cout << "====================" << std::endl;
 		}
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
@@ -429,6 +534,87 @@ int main()
 			clearMonitor();
 			showBanner(workname, working, config);
 		}
+#ifdef APISENDER_STRESS_TESTING
+		else if (command_1 == "stress") {
+			apisender::stress_testing stress;
+			clearMonitor();
+			if (stress.config != Json::nullValue) {
+				std::vector<std::string> worklist = stress.config.getMemberNames();
+				for (const auto& w : worklist) {
+					std::cout << w << " \n";
+				}
+			}
+			else {
+				stress.save();
+			}
+			std::thread(&apisender::Logger::printfunction, &stress.log).detach();
+			stress.log.log(apisender::DEBUG, "stress.log printfunction\n");
+			std::string working_stress;
+			stress.workers_number = 100;
+			std::string command_2_1;
+
+			std::vector<std::thread> threads;
+			int thread_top = 0;
+			bool status =false;
+			std::cin >> command_2_1;
+			while (command_2_1 != "q") {
+				if (command_2_1 == "start") {
+					std::cin >> working_stress;
+					stress.status = true;
+					stress.log.log(apisender::DEBUG, "status: true\n");
+					for (int i = 0; i < stress.workers_number; i++) {
+						threads.push_back(std::thread(&apisender::stress_testing::RunF, &stress, working_stress));
+						threads[i + thread_top].detach();
+					}
+					thread_top += stress.workers_number;
+					stress.log.log(apisender::DEBUG, "thread_top:" + std::to_string(thread_top) + "\n");
+					stress.log.log(apisender::DEBUG, "thread: create RunF\n");
+					if (!status)
+						std::thread(&apisender::stress_testing::runPerSecond, &stress).detach();
+					stress.log.log(apisender::DEBUG, "thread: runPerSecond\n");
+					status = true;
+
+				}
+				else if (command_2_1 == "stop") {
+					threads.swap(std::vector<std::thread>());
+					thread_top = 0;
+					stress.status = false;
+					status = false;
+					stress.log.log(apisender::DEBUG, "status: false\n");
+				}
+				else if (command_2_1 == "new") {
+					stress.log.logtype = apisender::NONE;
+					std::string url, request, nm;
+					std::cout << "====STRESS TESTING HELPER====\n";
+					std::cout << "Working Stress Name:";
+					std::cin >> nm;
+					std::cout << "FULL URL:";
+					std::cin >> url;
+					std::cout << "Request Body:";
+					std::cin >> request;
+					if (jsonfile::parse(request) != Json::nullValue) {
+						stress.config[nm]["request"] = jsonfile::parse(request);
+					}
+					else {
+						stress.config[nm]["request"] = request;
+					}
+					stress.config[nm]["url"] = url;
+
+					stress.save();
+					stress.log.logtype = apisender::INFO;
+				}
+				else if (command_2_1 == "set") {
+#ifdef _WIN32
+					system((std::string("notepad ") + APISENDER_PATH "/stress.json").c_str());
+#elif __linux__
+					system((std::string("vim ") + APISENDER_PATH "/stress.json").c_str());
+#endif
+					stress.config = jsonfile::readJsonFile(APISENDER_PATH "/stress.json");
+				}
+				std::cin >> command_2_1;
+			}
+		}
+#endif
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
