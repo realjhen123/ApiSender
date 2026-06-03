@@ -535,6 +535,9 @@ int main()
 			clearMonitor();
 			showBanner(workname, working, config);
 		}
+		else if (command_1 == "version" || command_1 == "v") {
+			std::cout << "Compile: " << __DATE__ << " " << __TIME__ << "\n";
+		}
 #ifdef APISENDER_STRESS_TESTING
 		else if (command_1 == "stress") {
 			apisender::stress_testing stress;
