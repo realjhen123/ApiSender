@@ -39,7 +39,8 @@
 #define SUCCEED 1
 
 bool ui = true;
-
+bool ez = false;
+bool history = false;
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -93,14 +94,15 @@ namespace jsonfile {
 		return jsonfile::readJsonFromString(str_);
 	}
 
-	static std::string parse(Json::Value json_) {
-		return jsonfile::jsontoString(json_);
+	static std::string parse(Json::Value json_,std::string tap_ = jsonfile::sep) {
+		return jsonfile::jsontoString(json_, tap_);
 	}
 
 	//	static void writeJsonFile(const string filename)
 };
 class CurlClient {
 public:  
+	bool stream = false;
 	CURL* curl_;
 	struct curl_slist* headers = nullptr;
 
@@ -123,9 +125,10 @@ public:
 		curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, this->headers);
 		curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl_, CURLOPT_POST, 1L);
-		curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
+		if (!ez) curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
 		curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, data.c_str());
-		curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
+		if (stream)curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION,CurlClient::PrintStreamCallback );
+		else curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
 		curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response);
 		CURLcode res = curl_easy_perform(curl_);
 		return (res == CURLE_OK);
@@ -144,6 +147,29 @@ public:
 	static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 		size_t realsize = size * nmemb;
 		std::string* str = static_cast<std::string*>(userp);
+		str->append(static_cast<char*>(contents), realsize);
+		return realsize;
+	}
+	static size_t PrintStreamCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+		size_t realsize = size * nmemb;
+		std::string* str = static_cast<std::string*>(userp);
+		if (ez) { 
+			if (jsonfile::parse((std::string)(char*)contents) != Json::nullValue) {
+				Json::Value json = jsonfile::parse((std::string)(char*)contents);
+				if (json.get("response", "") != "") { 
+					std::cout << json["response"].asString(); 
+					if (history) {
+						std::ofstream out(APISENDER_PATH "/history.txt", std::ios::app);
+						out << json["response"].asString();
+					}
+				}
+				else {
+					std::string p = jsonfile::parse(jsonfile::parse((std::string)(char*)contents)["response"], "");
+					if (p != "")std::cout << p << std::endl;
+				}
+			}
+		}
+		else std::cout << (char*)contents;
 		str->append(static_cast<char*>(contents), realsize);
 		return realsize;
 	}
@@ -260,7 +286,10 @@ namespace apisender {
 	};
 #endif
 }
-
+static std::string outputbool(bool A_) {
+	if (A_)return std::string("True");
+	else return std::string("False");
+}
 static void showBanner(std::string workspace_, std::string working_) {
 	if (!ui)return;
 	std::cout << "workspace:\t" << workspace_ << std::endl
@@ -287,6 +316,7 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
 		jsonfile::sep = "\t";
 	}
+	std::cout << "\n------PERSONAL------\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui);
 	std::cout << "\n=====Apisender=====" << std::endl;
 }
 static void clearMonitor() {
@@ -300,7 +330,11 @@ static void clearMonitor() {
 
 int main()
 {
+#ifdef _WIN32
 	system("title Apisender");
+	system("chcp 65001");
+#endif
+	
 	system("mkdir " APISENDER_PATH);
 	clearMonitor();
 	std::string command_1, command_2, command_3, command_4;
@@ -310,6 +344,8 @@ int main()
 	jsonfile::sep = "  ";
 	if ((!basicconfig["personal"]["ui"].asBool()) && basicconfig["personal"]["ui"].isBool())ui = false;
 	else if (!basicconfig["personal"]["ui"].isBool()) { basicconfig["personal"]["ui"] = true; ui = true; };
+	ez = basicconfig["personal"].get("ez", false).asBool();
+	history = basicconfig["personal"].get("history", false).asBool();
 	showBanner(workname, working);
 	std::cout << ">";
 	std::cin >> command_1;
@@ -381,6 +417,14 @@ int main()
 		}
 		else if (command_1 == "load" || command_1 == "l" || command_1 == "spaceload" || command_1 == "loadspace") {
 			std::cin >> command_2;
+			bool h = false;
+			if (command_2 == "history") {
+				std::ifstream in(APISENDER_PATH "/history.txt", std::ios::in);
+				std::string line; 
+				while (std::getline(in, line))std::cout << line << std::endl;
+				h = true;
+				goto ENDLOAD;
+			}
 			for (char c : command_2) {
 				if ((c < 65 || c>122) && c != 46 )std::abort();
 				else if (c > 90 && c < 97 && c != 95)std::abort();
@@ -394,9 +438,9 @@ int main()
 				workname = command_2;
 			}
 			config = jsonfile::readJsonFile(workfile);
-
-			clearMonitor();
-			showBanner(workname, working, config);
+			ENDLOAD:
+			if (!h)clearMonitor();
+			if (!h)showBanner(workname, working, config);
 		}
 		else if (command_1 == "reload" || command_1 == "rl") {
 			config = jsonfile::readJsonFile(workfile);
@@ -413,6 +457,9 @@ int main()
 				command_4 = "";
 				std::cin >> command_1;
 				continue;
+			}
+			if (config[working]["response"]["stream"] == true) {
+				cc.stream = true;
 			}
 			cc.headers = nullptr;
 			std::vector<std::string> k = config[working]["request"]["header"].getMemberNames();
@@ -443,12 +490,32 @@ int main()
 				);
 			}
 			else if (config[working]["method"].asString() == "post" || config[working]["method"].asString() == "Post" || config[working]["method"].asString() == "POST") {
-				std::string req = config[working]["request"]["body"].isObject() ? jsonfile::parse(config[working]["request"]["body"]) : config[working]["request"]["body"].asString();
+				std::string req;
+				if (config[working]["request"]["body"].isObject()) {
+					Json::Value req_json = config[working]["request"]["body"];
+					std::vector<std::string> h = req_json.getMemberNames();
+					for (const auto& h_ : h) {
+						if (req_json[h_].asString() == "$(INPUT)") {
+							std::cout << "Input \"" << h_ << "\" >";
+							std::string in;
+							std::cin.ignore();
+							std::getline(std::cin, in);
+							req_json[h_] = in;
+						}
+					}
+					req = jsonfile::parse(req_json);
+				}
+				else {
+					req = config[working]["request"]["body"].asString();
+				}
+				
+				//std::string req = config[working]["request"]["body"].isObject() ? jsonfile::parse(config[working]["request"]["body"]) : config[working]["request"]["body"].asString();
 				std::cout << "Url:" << config[working]["url"].asString() << std::endl
 					<< "Request Body:" << req << std::endl;
 				std::cout << "Request Header: ";
 				cc.OutputReqHeaders();
 				std::cout << std::endl;
+				if (cc.stream)std::cout << "Response:" << std::endl;
 				cc.Post(
 					config[working]["url"].asString(),
 					req,
@@ -456,12 +523,13 @@ int main()
 				);
 
 			}
+			
 			if (config[working]["response"]["type"] == "commandline") {
-				std::cout << "Response:" << std::endl;
-				std::cout << res << std::endl;
+				if (!cc.stream)std::cout << "Response:" << std::endl;
+				if (!cc.stream)std::cout << res << std::endl;
 			}
 			else if (config[working]["response"]["type"] == "json") {
-				std::cout << jsonfile::parse(res);
+				if (!cc.stream)std::cout << jsonfile::parse(res);
 			}
 			else {
 				std::ofstream out(config[working]["response"]["type"].asString(), std::ios::app);
@@ -475,6 +543,7 @@ int main()
 				out.close();
 			}
 			std::cout << "====================" << std::endl;
+			cc.stream = false;
 		}
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
@@ -506,6 +575,29 @@ int main()
 			basicconfig["personal"]["ui"] = ui;
 			clearMonitor();
 			showBanner(workname, working, config);
+			jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
+		}
+		else if (command_1 == "ez") {
+			std::cin >> command_2;
+			if (command_2 == "on")ez = true;
+			else ez = false;
+			basicconfig["personal"]["ez"] = ez;
+			jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
+		}
+		else if (command_1 == "history") {
+			std::cin >> command_2;
+			
+			if (command_2 == "on")history = true;
+			else if (command_2 == "set") {
+#ifdef _WIN32
+				system((std::string("notepad ") + APISENDER_PATH "/history.txt").c_str());
+#elif __linux__
+				system((std::string("vim ") + APISENDER_PATH "/history.txt").c_str());
+#endif
+			}
+			else history = false;
+			basicconfig["personal"]["history"] = history;
+			jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 		}
 		else if (command_1 == "this") {
 			std::cout << "workspace:" << workname << std::endl;
