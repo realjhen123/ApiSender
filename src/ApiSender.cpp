@@ -508,7 +508,7 @@ int main()
 							std::cout << "Input \"" << h_ << "\" >";
 							std::string in;
 							std::cin.ignore();
-							std::getline(std::cin, in);
+							std::getline(std::cin >> std::ws, in);
 							req_json[h_] = in;
 						}
 					}
