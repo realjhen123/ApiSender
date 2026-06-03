@@ -41,6 +41,7 @@
 bool ui = true;
 bool ez = false;
 bool history = false;
+bool nevertimeout = true;
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -130,6 +131,13 @@ public:
 		if (stream)curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION,CurlClient::PrintStreamCallback );
 		else curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
 		curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response);
+		if (nevertimeout) {
+			curl_easy_setopt(curl_, CURLOPT_TIMEOUT, 0L);
+			curl_easy_setopt(curl_, CURLOPT_CONNECTTIMEOUT, 0L);
+			curl_easy_setopt(curl_, CURLOPT_LOW_SPEED_LIMIT, 0L);
+			curl_easy_setopt(curl_, CURLOPT_LOW_SPEED_TIME, 0L);
+			curl_easy_setopt(curl_, CURLOPT_TCP_KEEPALIVE, 1L);
+		}
 		CURLcode res = curl_easy_perform(curl_);
 		return (res == CURLE_OK);
 	}
@@ -174,9 +182,10 @@ public:
 		return realsize;
 	}
 	void OutputReqHeaders() const {
+		std::cout << "\n";
 		struct curl_slist* p = this->headers;
 		while (p != NULL) {
-			std::cout << p->data;
+			std::cout << p->data << "\n";
 			p = p->next;
 		}
 	}
