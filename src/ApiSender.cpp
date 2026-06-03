@@ -503,11 +503,11 @@ int main()
 				if (config[working]["request"]["body"].isObject()) {
 					Json::Value req_json = config[working]["request"]["body"];
 					std::vector<std::string> h = req_json.getMemberNames();
+					std::cin.ignore();
 					for (const auto& h_ : h) {
 						if (req_json[h_].asString() == "$(INPUT)") {
 							std::cout << "Input \"" << h_ << "\" >";
-							std::string in;
-							std::cin.ignore();
+							std::string in;	
 							std::getline(std::cin >> std::ws, in);
 							req_json[h_] = in;
 						}
