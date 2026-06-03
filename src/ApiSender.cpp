@@ -375,6 +375,7 @@ int main()
 			config["."]["cookies"] = Json::nullValue;
 			config["."]["response"]["type"] = "commandline";
 			config["."]["response"]["onJson"] = false;
+			config["."]["response"]["stream"] = false;
 			basicconfig["Apis"]["ApiSender"]["introduction"] = "";
 			working = ".";
 			if (command_2 == ".") {
@@ -413,9 +414,10 @@ int main()
 				config[command_2]["request"]["header"] = Json::nullValue;
 				config[command_2]["request"]["body"] = "";
 				config[command_2]["cookies"] = Json::nullValue;
-				config[command_2]["response"]["type"] = "commandline";
 				config[command_2]["method"] = "get";
+				config[command_2]["response"]["type"] = "commandline";
 				config[command_2]["response"]["onJson"] = false;
+				config[command_2]["response"]["stream"] = false;
 				basicconfig["Apis"][workname][command_2] = "";
 			}
 			jsonfile::writeJsonFile(workfile,config);
