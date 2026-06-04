@@ -108,7 +108,7 @@ public:
 	struct curl_slist* headers = nullptr;
 
     CurlClient() {
-        curl_global_init(CURL_GLOBAL_ALL);
+        
         this->curl_ = curl_easy_init();
     }
     ~CurlClient()
@@ -266,7 +266,6 @@ namespace apisender {
 			std::string url = this->config[working]["url"].asString();
 			CURL* curl_ = curl_easy_init();
 			std::string response;
-			curl_global_init(CURL_GLOBAL_ALL);
 			curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
 			curl_easy_setopt(curl_, CURLOPT_POST, 1L);
 			curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, request.c_str());
@@ -343,7 +342,7 @@ int main()
 	system("title Apisender");
 	system("chcp 65001");
 #endif
-	
+	curl_global_init(CURL_GLOBAL_ALL);
 	system("mkdir " APISENDER_PATH);
 	clearMonitor();
 	std::string command_1, command_2, command_3, command_4;
