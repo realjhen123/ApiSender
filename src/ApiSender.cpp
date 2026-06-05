@@ -23,14 +23,12 @@
 	#define APISENDER_PATH ".ApiSender"
 #endif
 #include <iostream>
-#include <map>
 #include <curl/curl.h>
 #include "json/json.h"
 #include <stdlib.h>
 #include <ctime>
 #include <fstream>
 #include <thread>
-#include <future>
 #include <vector>
 #include <queue>
 #include <mutex>
@@ -323,7 +321,7 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
 		jsonfile::sep = "\t";
 	}
-	std::cout << "\n------PERSONAL------\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui);
+	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui);
 	std::cout << "\n=====Apisender=====" << std::endl;
 }
 static void clearMonitor() {
