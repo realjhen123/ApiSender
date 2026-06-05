@@ -40,6 +40,7 @@ bool ui = true;
 bool ez = false;
 bool history = false;
 bool nevertimeout = true;
+bool showheader = true;
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -123,7 +124,8 @@ public:
 		curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, this->headers);
 		curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl_, CURLOPT_POST, 1L);
-		if (!ez) curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
+		if (!ez && showheader) curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
+		else curl_easy_setopt(curl_, CURLOPT_HEADER, 0L);
 		curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, data.c_str());
 		if (stream)curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION,CurlClient::PrintStreamCallback );
 		else curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
@@ -302,8 +304,9 @@ namespace apisender {
 		*	url
 		*	method
 		*/
-		std::cin.ignore();
 		CurlClient cc;
+		bool ez_b = ez;
+		if (silence)showheader = false;
 		if (config_[working]["response"]["stream"] == true) {
 			cc.stream = true;
 		}
@@ -335,7 +338,7 @@ namespace apisender {
 			if (config_[working]["request"]["body"].isObject()) {
 				Json::Value req_json = config_[working]["request"]["body"];
 				std::vector<std::string> h = req_json.getMemberNames();
-				std::cin.ignore();
+				
 				for (const auto& h_ : h) {
 					std::string h_s = req_json[h_].asString();
 					if (h_s.find('$') != std::string::npos) {
@@ -349,14 +352,17 @@ namespace apisender {
 						else if (h_s.find('`') != std::string::npos) {
 							std::string target_working, target_space;
 
-							target_space = APISENDER_PATH + h_s.substr(2, h_s.find('`') - 2);
-							for (char c : target_space) {
+							target_space = APISENDER_PATH;
+							target_space +=  "/" + h_s.substr(2, h_s.find('`') - 2) + ".txt";
+							for (char c : h_s.substr(2, h_s.find('`') - 2)) {
 								if ((c < 65 || c>122) && c != 46)std::abort();
 								else if (c > 90 && c < 97 && c != 95)std::abort();
 							}
-
-							target_working = h_s.substr(h_s.find('`'), h_s.size() - h_s.find('`') - 1);
-							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), working, true);
+							target_working = h_s.substr(h_s.find('`') +1 , h_s.size() - h_s.find('`'));
+							target_working = target_working.substr(0, target_working.size() - 1);
+							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, true);
+							
+							
 						}
 					}
 				}
@@ -397,8 +403,10 @@ namespace apisender {
 			}
 			out.close();
 		}
-		std::cout << "====================" << std::endl;
+		if (!silence)std::cout << "====================" << std::endl;
 		cc.stream = false;
+		showheader = true;
+		return res;
 	}
 }
 static std::string outputbool(bool A_) {
@@ -566,119 +574,8 @@ int main()
 			showBanner(workname, working, config);
 		}
 		else if (command_1 == "run") {
-			if (working == "") {
-				std::cout << "Have not working" << std::endl;
-				command_1 = "";
-				command_2 = "";
-				command_3 = "";
-				command_4 = "";
-				std::cin >> command_1;
-				continue;
-			}
-			if (config[working]["response"]["stream"] == true) {
-				cc.stream = true;
-			}
-			cc.headers = nullptr;
-			std::vector<std::string> k = config[working]["request"]["header"].getMemberNames();
-			for (const auto& it : k) {
-				cc.addHeader(it + ": " + config[working]["request"]["header"][it].asString());
-			}
-			std::string res;
-			if (config[working]["method"].asString() == "get" || config[working]["method"].asString() == "Get" || config[working]["method"].asString() == "GET") {
-				std::string req;
-				if (config[working]["request"]["body"].isObject()) {
-					req = "?";
-					std::vector<std::string> k = config[working]["request"]["body"].getMemberNames();
-					for (const auto& it : k) {
-						req += it;
-						req += "=";
-						req += config[working]["request"]["body"][it].asString();
-						req += "&";
-					}
-					req = req.substr(0, req.size() - 1);
-				}
-				std::cout << "Url:" << config[working]["url"].asString() + req << std::endl
-					<< "Request Header: ";
-				cc.OutputReqHeaders();
-				std::cout << std::endl;
-				cc.Get(
-					config[working]["url"].asString() + req,
-					res
-				);
-			}
-			else if (config[working]["method"].asString() == "post" || config[working]["method"].asString() == "Post" || config[working]["method"].asString() == "POST") {
-				std::string req;
-				if (config[working]["request"]["body"].isObject()) {
-					Json::Value req_json = config[working]["request"]["body"];
-					std::vector<std::string> h = req_json.getMemberNames();
-					std::cin.ignore();
-					for (const auto& h_ : h) {
-						std::string h_s = req_json[h_].asString();
-						if (h_s.find('$') != std::string::npos) {
-							if (h_s == "$(INPUT)") {
-								std::cout << "Input \"" << h_ << "\" >";
-								std::string in;
-								std::getline(std::cin >> std::ws, in);
-								req_json[h_] = in;
-							}
-							// $(apisender`/login)
-					/*		else if (h_s.find('`') != std::string::npos) {
-								std::string target_working, target_space;
-								// apisender
-								target_space = APISENDER_PATH + h_s.substr(2, h_s.find('`') - 2);
-								for (char c : target_space) {
-									if ((c < 65 || c>122) && c != 46)std::abort();
-									else if (c > 90 && c < 97 && c != 95)std::abort();
-								}
-								// /login
-								target_working = h_s.substr(h_s.find('`'), h_s.size() - h_s.find('`') - 1);
-								Json::Value target_config = jsonfile::readJsonFile(target_space);
-								target_config = target_config[target_working];
-
-								
-							}*/
-						}
-					}
-					req = jsonfile::parse(req_json);
-				}
-				else {
-					req = config[working]["request"]["body"].asString();
-				}
-	
-				if (!ez)std::cout << "Url:" << config[working]["url"].asString() << std::endl
-					<< "Request Body:" << req << std::endl;
-				if (!ez)std::cout << "Request Header: ";
-				cc.OutputReqHeaders();
-				std::cout << std::endl;
-				if (cc.stream)std::cout << "Response:" << std::endl;
-				cc.Post(
-					config[working]["url"].asString(),
-					req,
-					res
-				);
-
-			}
-			
-			if (config[working]["response"]["type"] == "commandline") {
-				if (!cc.stream)std::cout << "Response:" << std::endl;
-				if (!cc.stream)std::cout << res << std::endl;
-			}
-			else if (config[working]["response"]["type"] == "json") {
-				if (!cc.stream)std::cout << jsonfile::parse(res);
-			}
-			else {
-				std::ofstream out(config[working]["response"]["type"].asString(), std::ios::app);
-				out << "\n" << getReadableTime() << "\n";
-				if (config[working]["response"]["onJson"].asBool()) {
-					out << jsonfile::parse(res) << "\n";
-				}
-				else {
-					out << res << "\n";
-				}
-				out.close();
-			}
-			std::cout << "====================" << std::endl;
-			cc.stream = false;
+			std::cin.ignore();
+			apisender::runawork(config, working, false);
 		}
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
