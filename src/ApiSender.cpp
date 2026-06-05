@@ -311,7 +311,7 @@ namespace apisender {
 			cc.stream = true;
 		}
 		std::string res;
-		for (const auto& it : config_[working]["request"].getMemberNames()) cc.addHeader(it + ": " + config_[working]["request"]["header"][it].asString());
+		for (const auto& it : config_[working]["request"]["header"].getMemberNames()) cc.addHeader(it + ": " + config_[working]["request"]["header"][it].asString());
 		if (config_[working]["method"].asString() == "get" || 
 			config_[working]["method"].asString() == "Get" || 
 			config_[working]["method"].asString() == "GET") {
