@@ -78,7 +78,6 @@ namespace jsonfile {
 		Json::StreamWriterBuilder builder;
 		builder["emitUTF8"] = true;
 		builder["indentation"] = tap_;
-		// 设置错误处理（避免默认断言崩溃）
 		builder["commentStyle"] = "None";
 		builder["allowComments"] = false;
 		std::string json_str;
