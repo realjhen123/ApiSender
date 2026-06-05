@@ -45,6 +45,7 @@ Very Lite API Development tools power by libcurl
             },
             "response":{
                 "onJson":false,
+                "stream":false,
                 "type":"a.txt"
             },
             "url":"http://example.com"
@@ -56,13 +57,21 @@ Very Lite API Development tools power by libcurl
     Pay a attention, If request body is a string, It will send a Original string<br>
 
     When the method is get, url's query can write on request body with json, Apisender will parse<br>
-    > replace the space with '%20'
+    > replace the space with '%20'<br>
+
+    On Request Body, if you using POST, you can use $(INPUT) to set when you `run` input,<br>
+    or $(\<space\>`\<working\>) to replace a data,that will send a api call before main api call.<br>
+    That can help you to make a Call Line from api by api.<br>
 
     Using `run`
 
     Using `c` `cls` or `clear` to clean the monitor.
 
     Using `ui on` to enable ui, `ui off` to disable ui.
+
+    Using `ez on` to enable easy mode, `ez off` to disable easy mode
+
+    > When ez mode and stream both enable,Apisender will try to parse the datapack.For AI.
 
     Using `u` to load last time used.
     

@@ -47,6 +47,7 @@
             },
             "response":{
                 "onJson":false,
+                "stream":false,
                 "type":"a.txt"
             },
             "url":"http://example.com"
@@ -58,13 +59,21 @@
     值得注意的, request body如果是字符串,则会原封不动的作为请求体发送<br>
 
     当method为get时,请求url所带的query也可用标准Json写在request body中, Apisender会自动解析<br>
-    > 注意空格需要用%20替换
+    > 注意空格需要用%20替换<br>
+    
+    在请求体中,如果你用了POST,你可以使用$(INPUT)来规定一个在执行`run`时从命令行输入的数据<br>
+    或 $(\<工作区\>`\<工作\>),这会让一个API在根API调用前被调用<br>
+    从而实现API调用链<br>
 
     使用`run` 发送所选的Api配置
 
     使用 `c` `cls` 或 `clear` 清屏
 
     使用 `ui on` 打开ui, `ui off` 关闭ui
+
+    使用 `ez on` 打开简单模式, `ez off` 关闭简单模式
+    
+    >当简单模式和流同时启用时,会自动尝试解析包内容,为了AI
 
     使用 `u` 加载上次关闭时的进度
     
