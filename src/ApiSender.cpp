@@ -292,7 +292,35 @@ namespace apisender {
 		}
 	};
 #endif
-	std::string runawork(Json::Value config_,std::string working,bool silence = false) {
+	bool stringcompare(std::string target_str,std::string compare_with) {
+		int i = 0;
+		const char a = (char)54;
+		for (char c : target_str) {
+			if ((compare_with[i] == c + 32) || (compare_with[i] == c - 32) || (compare_with[i] == c))i++;
+			else return false;
+		}
+		return true;
+	}
+	namespace error {
+		enum ErrorCode {
+			ASE0001,
+
+		};
+		std::unordered_map<apisender::error::ErrorCode, std::string> ErrorInfo;
+		void initErrorInfo() {
+			ErrorInfo[ASE0001] = "No Allow Char";
+		}
+		void DropError(apisender::error::ErrorCode ecode, std::string rawcontent) {
+			std::cout << "\n\n\n===============\n";
+			std::cout << "We have some problem.\n";
+			std::cout << " ErrorLocation Debug:" << rawcontent << std::endl;
+			std::cout << "Error Code:" << ecode;
+			std::cout << " " << apisender::error::ErrorInfo[ecode] << "\n";
+			std::abort();
+		}
+	}
+	
+	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence) {
 		/*
 		*config_
 		* working
@@ -331,9 +359,10 @@ namespace apisender {
 				res
 			);
 		}
-		else if (config_[working]["method"].asString() == "post" ||
-			config_[working]["method"].asString() == "Post" ||
-			config_[working]["method"].asString() == "POST") {
+		//else if (config_[working]["method"].asString() == "post" ||
+		//	config_[working]["method"].asString() == "Post" ||
+		//	config_[working]["method"].asString() == "POST") {
+		else if (stringcompare(config_[working]["method"].asString(),"post")) {
 			std::string req;
 			if (config_[working]["request"]["body"].isObject()) {
 				Json::Value req_json = config_[working]["request"]["body"];
@@ -350,19 +379,26 @@ namespace apisender {
 						}
 						// $(apisender`/login)
 						else if (h_s.find('`') != std::string::npos) {
-							std::string target_working, target_space;
-
-							target_space = APISENDER_PATH;
-							target_space +=  "/" + h_s.substr(2, h_s.find('`') - 2) + ".txt";
-							for (char c : h_s.substr(2, h_s.find('`') - 2)) {
-								if ((c < 65 || c>122) && c != 46)std::abort();
-								else if (c > 90 && c < 97 && c != 95)std::abort();
+							std::string target_working, target_space , target_spacename;
+							target_spacename = h_s.substr(2, h_s.find('`') - 2);
+							if (target_spacename == "~" || target_spacename == "") {
+								target_spacename = workspace;
 							}
+							else if (target_spacename == ".") {
+								target_spacename = "ApiSender";
+							}
+							target_space = APISENDER_PATH;
+							target_space +=  "/" + target_spacename + ".txt";
+							for (char c : h_s.substr(2, h_s.find('`') - 2)) {
+								if ((c < 65 || c>122) && c != 46 && c != 126)apisender::error::DropError(apisender::error::ASE0001, "h_s");
+								else if (c > 90 && c < 97 && c != 95 && c != 126)apisender::error::DropError(apisender::error::ASE0001, "h_s");
+							}
+							
 							target_working = h_s.substr(h_s.find('`') +1 , h_s.size() - h_s.find('`'));
 							target_working = target_working.substr(0, target_working.size() - 1);
-							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, true);
-							
-							
+							if (!ez)std::cout << target_spacename << " " << target_working << "\n";
+							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
+							std::cout << req_json[h_] << std::endl;
 						}
 					}
 				}
@@ -458,6 +494,7 @@ int main()
 	system("chcp 65001");
 #endif
 	curl_global_init(CURL_GLOBAL_ALL);
+	apisender::error::initErrorInfo();
 	system("mkdir " APISENDER_PATH);
 	clearMonitor();
 	std::string command_1, command_2, command_3, command_4;
@@ -479,8 +516,9 @@ int main()
 			config = Json::nullValue;
 			std::cin >> command_2 >> command_3;
 			for (char c : command_2) {
-				if ((c < 65 || c>122) && c != 46 )std::abort();
+				if ((c < 65 || c>122) && c != 46)std::abort();
 				else if (c > 90 && c < 97 && c != 95)std::abort();
+				else if (c == '`')std::abort();
 			}
 			config["."]["url"] = "";
 			config["."]["request"]["header"] = Json::nullValue;
@@ -522,6 +560,7 @@ int main()
 		else if (command_1 == "switch" || command_1 == "sw") {
 			config = jsonfile::readJsonFile(workfile);
 			std::cin >> command_2;
+			if (command_2.find('`') != std::string::npos)std::abort();
 			working = command_2;
 			if (!config[working].isObject()) {
 				config[command_2]["url"] = "";
@@ -575,7 +614,7 @@ int main()
 		}
 		else if (command_1 == "run") {
 			std::cin.ignore();
-			apisender::runawork(config, working, false);
+			apisender::runawork(config, working, workname, false);
 		}
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
