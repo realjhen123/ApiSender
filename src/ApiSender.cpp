@@ -398,7 +398,7 @@ namespace apisender {
 							target_working = target_working.substr(0, target_working.size() - 1);
 							if (!ez)std::cout << target_spacename << " " << target_working << "\n";
 							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
-							std::cout << req_json[h_] << std::endl;
+							if (!ez)std::cout << req_json[h_] << std::endl;
 						}
 					}
 				}
