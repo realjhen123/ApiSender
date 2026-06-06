@@ -333,6 +333,7 @@ namespace apisender {
 		*	method
 		*/
 		CurlClient cc;
+		std::string target_url = config_[working]["url"].asString();
 		bool ez_b = ez;
 		if (silence)showheader = false;
 		if (config_[working]["response"]["stream"] == true) {
@@ -340,6 +341,10 @@ namespace apisender {
 		}
 		std::string res;
 		for (const auto& it : config_[working]["request"]["header"].getMemberNames()) cc.addHeader(it + ": " + config_[working]["request"]["header"][it].asString());
+		if (target_url.find("base") != std::string::npos) {
+			std::string t_url = target_url.substr(target_url.find("base") + target_url.size() == 4 ? 4 : 5);
+			target_url = config_["base_url"].asString() + t_url;
+		}
 		if (config_[working]["method"].asString() == "get" || 
 			config_[working]["method"].asString() == "Get" || 
 			config_[working]["method"].asString() == "GET") {
@@ -355,7 +360,7 @@ namespace apisender {
 			cc.OutputReqHeaders();
 			if (!silence)std::cout << std::endl;
 			cc.Get(
-				config_[working]["url"].asString() + req,
+				target_url + req,
 				res
 			);
 		}
@@ -415,7 +420,7 @@ namespace apisender {
 			}
 			if (cc.stream && !silence) std::cout << "Response:" << std::endl;
 			cc.Post(
-				config_[working]["url"].asString(),
+				target_url,
 				req,
 				res
 			);
@@ -462,7 +467,7 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 		<< "===================" << std::endl;
 	std::cout << "work: " << std::endl;
 	std::vector<std::string> c = c_.getMemberNames();
-	for (const auto& it : c)std::cout << it << " ";
+	for (const auto& it : c)if (it != "base_url")std::cout << it << " ";
 	if (c_[working_].isObject()) {
 		jsonfile::sep = "";
 		std::cout << "\n===================" << std::endl;
@@ -528,6 +533,7 @@ int main()
 			config["."]["response"]["type"] = "commandline";
 			config["."]["response"]["onJson"] = false;
 			config["."]["response"]["stream"] = false;
+			config["base_url"] = "";
 			basicconfig["Apis"]["ApiSender"]["introduction"] = "";
 			working = ".";
 			if (command_2 == ".") {
@@ -563,7 +569,7 @@ int main()
 			if (command_2.find('`') != std::string::npos)std::abort();
 			working = command_2;
 			if (!config[working].isObject()) {
-				config[command_2]["url"] = "";
+				config[command_2]["url"] = "base " + command_2;
 				config[command_2]["request"]["header"] = Json::nullValue;
 				config[command_2]["request"]["body"] = "";
 				config[command_2]["cookies"] = Json::nullValue;
