@@ -341,8 +341,8 @@ namespace apisender {
 		}
 		std::string res;
 		for (const auto& it : config_[working]["request"]["header"].getMemberNames()) cc.addHeader(it + ": " + config_[working]["request"]["header"][it].asString());
-		if (target_url.find("base") != std::string::npos) {
-			std::string t_url = target_url.substr(target_url.find("base") + target_url.size() == 4 ? 4 : 5);
+		if (target_url.find("$base") != std::string::npos) {
+			std::string t_url = target_url.substr(target_url.find("base") + target_url.size() == 5 ? 5 : 6);
 			target_url = config_["base_url"].asString() + t_url;
 		}
 		if (config_[working]["method"].asString() == "get" || 
@@ -569,7 +569,7 @@ int main()
 			if (command_2.find('`') != std::string::npos)std::abort();
 			working = command_2;
 			if (!config[working].isObject()) {
-				config[command_2]["url"] = "base " + command_2;
+				config[command_2]["url"] = "$base " + command_2;
 				config[command_2]["request"]["header"] = Json::nullValue;
 				config[command_2]["request"]["body"] = "";
 				config[command_2]["cookies"] = Json::nullValue;
