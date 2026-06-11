@@ -494,6 +494,9 @@ static void clearMonitor() {
 
 int main()
 {
+#ifdef _DEBUG
+	std::cout << "Debug";
+#endif
 #ifdef _WIN32
 	system("title Apisender");
 	system("chcp 65001");
@@ -721,7 +724,8 @@ int main()
 				stress.save();
 			}
 			std::thread(&apisender::Logger::printfunction, &stress.log).detach();
-			stress.log.log(apisender::DEBUG, "stress.log printfunction\n");
+			stress.log.log(apisender::DEBUG, "stress.log printfunction print\n");
+			stress.log.log(apisender::LogType::WARN, "Tip:$() on stress mode is unsupport\n");
 			std::string working_stress;
 			stress.workers_number = 100;
 			std::string command_2_1;
