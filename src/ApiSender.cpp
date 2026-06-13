@@ -875,7 +875,9 @@ int main()
 				std::cout << "cloud push\n"
 					<< "cloud pull\n"
 					<< "cloud assistant\n"
+					<< "cloud set\n"
 					<< "cloud clear\n";
+				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
 			}
 			else if (command_2 == "clear") {
 				cloud = Json::nullValue;
