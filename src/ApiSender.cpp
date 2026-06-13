@@ -780,43 +780,6 @@ int main()
 			}
 		}
 #endif
-		else if (command_1 == "cloud") {
-			std::cin >> command_2;
-			if (command_2 == "help") {
-				std::cout << "\ncloud help login push pull logout set uwork";
-			}
-			else if (command_2 == "login") {
-				std::string lo;
-				//std::cout << "=====cloud asssistant======\n";
-				std::cout << "Login with token?(y or n):";
-				std::cin >> lo;
-				if (apisender::stringcompare(lo,"y") || apisender::stringcompare(lo, "yes")) {
-					std::cout << "Pay A Attention, Token will be save in UNENCRYPTED way.\n";
-					std::cout << "So You can new a dedicated token to object \"APISENDER_CLOUD\"";
-					std::cout << "Please Input Your Token:\n";
-					std::string token;
-					std::cin >> token;
-					basicconfig["personal"]["cloud"]["token"] = token;
-					jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
-				}
-				else {
-					std::string username, password;
-					std::cout << "Please Input Username:";
-					std::cin >> username;
-					std::cout << "Please Input Password:";
-					std::cin >> password;
-					CurlClient clogin;
-				}
-			}
-			else if (command_2 == "set") {
-				std::cin >> command_3;
-				if (command_3 == "url") {
-					std::string url_push, url_pull, url_login;
-					Json::Value cloud;
-					
-				}
-			}
-		}
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
