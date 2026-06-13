@@ -827,7 +827,7 @@ int main()
 				cloud["login"]["response"]["type"] = "commandline";
 				cloud["login"]["method"] = "POST";
 
-				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
+				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
 			}
 			std::cin >> command_2;
 			if (command_2 == "cl") {
@@ -877,7 +877,7 @@ int main()
 					<< "cloud assistant\n"
 					<< "cloud set\n"
 					<< "cloud clear\n";
-				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
+				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
 			}
 			else if (command_2 == "clear") {
 				cloud = Json::nullValue;
