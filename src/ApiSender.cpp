@@ -381,12 +381,16 @@ namespace apisender {
 								target_spacename = "ApiSender";
 							}
 							target_space = APISENDER_PATH;
+#ifdef APISENDER_REMOTE_CLOUD
 							if (config_.get("cloud", "no") == "this") {
 								target_space += "/cloud.json";
 							}
 							else {
+#endif
 								target_space += "/" + target_spacename + ".txt";
+#ifdef APISENDER_REMOTE_CLOUD
 							}
+#endif
 							for (char c : h_s.substr(2, h_s.find('`') - 2)) {
 								if ((c < 65 || c>122) && c != 46 && c != 126)apisender::error::DropError(apisender::error::ASE0001, "h_s");
 								else if (c > 90 && c < 97 && c != 95 && c != 126)apisender::error::DropError(apisender::error::ASE0001, "h_s");
@@ -398,9 +402,11 @@ namespace apisender {
 							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
 							if (!ez && !silence)std::cout << req_json[h_] << std::endl;
 						}
+#ifdef APISENDER_REMOTE_CLOUD
 						else if (h_s == "$(D)") {
 							req_json[h_] = config_["raw"];
 						}
+#endif 
 					}
 				}
 				req = jsonfile::parse(req_json);
@@ -789,6 +795,7 @@ int main()
 			}
 		}
 #endif
+#ifdef APISENDER_REMOTE_CLOUD
 		else if (command_1 == "cloud") {
 			Json::Value cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
 			if (cloud == Json::nullValue) {
@@ -895,6 +902,7 @@ int main()
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 			}
 		}
+#endif
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
