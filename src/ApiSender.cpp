@@ -105,14 +105,14 @@ public:
 		this->headers = curl_slist_append(this->headers, header.c_str());
 		return SUCCEED;
 	}
-	bool Post(const std::string& url, const std::string& data, std::string& response) {
+	bool Post(const std::string& url, const std::string& data, std::string& response, bool header = true) {
 		if (!curl_) {
 			return false;
 		}
 		curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, this->headers);
 		curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl_, CURLOPT_POST, 1L);
-		if (!ez && showheader) curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
+		if (!ez && showheader && header) curl_easy_setopt(curl_, CURLOPT_HEADER, 1L);
 		else curl_easy_setopt(curl_, CURLOPT_HEADER, 0L);
 		curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, data.c_str());
 		if (stream)curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION,CurlClient::PrintStreamCallback );
@@ -393,6 +393,9 @@ namespace apisender {
 							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
 							if (!ez)std::cout << req_json[h_] << std::endl;
 						}
+						else if (h_s == "$(D)") {
+							req_json[h_] = config_["raw"];
+						}
 					}
 				}
 				req = jsonfile::parse(req_json);
@@ -410,7 +413,8 @@ namespace apisender {
 			cc.Post(
 				target_url,
 				req,
-				res
+				res,
+				!silence
 			);
 		}
 		if (silence)return res;
@@ -781,6 +785,37 @@ int main()
 		}
 #endif
 		else if (command_1 == "cloud") {
+			Json::Value cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
+			if (cloud == Json::nullValue) {
+				cloud["base_url"] = "";
+
+				cloud["push"]["request"]["body"]["data"] = "$(D)";
+				cloud["push"]["request"]["body"]["object"] = "APISENDER_CLOUD";
+				cloud["push"]["request"]["body"]["token"] = "$(`login)";
+				cloud["push"]["request"]["header"] = "";
+				cloud["push"]["url"] = "base /push";
+				cloud["push"]["response"]["stream"] = false;
+				cloud["push"]["response"]["type"] = "commandline";
+				cloud["push"]["method"] = "POST";
+
+				cloud["pull"]["request"]["body"]["object"] = "APISENDER_CLOUD";
+				cloud["pull"]["request"]["body"]["token"] = "$(`login)";
+				cloud["pull"]["request"]["header"] = "";
+				cloud["pull"]["url"] = "base /pull";
+				cloud["pull"]["response"]["stream"] = false;
+				cloud["pull"]["response"]["type"] = "commandline";
+				cloud["pull"]["method"] = "GET";
+
+				cloud["login"]["request"]["body"]["username"] = "";
+				cloud["login"]["request"]["body"]["password"] = "";
+				cloud["login"]["request"]["header"] = "";
+				cloud["login"]["url"] = "base /login";
+				cloud["login"]["response"]["stream"] = false;
+				cloud["login"]["response"]["type"] = "commandline";
+				cloud["login"]["method"] = "GET";
+
+				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
+			}
 			std::cin >> command_2;
 			if (command_2 == "help") {
 				std::cout << "\ncloud help login push pull logout set uwork";
@@ -809,11 +844,42 @@ int main()
 				}
 			}
 			else if (command_2 == "set") {
-				std::cin >> command_3;
-				if (command_3 == "url") {
-					std::string url_push, url_pull, url_login;
-					Json::Value cloud;
-					
+#ifdef _WIN32
+				system((std::string("notepad ") + APISENDER_PATH "/cloud.json").c_str());
+#elif __linux__
+				system((std::string("vim ") + APISENDER_PATH "/cloud.json").c_str());
+#endif
+				cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
+			}
+			else if (command_2 == "push") {
+				Json::Value d;
+				for (const auto& spacename : basicconfig["Apis"].getMemberNames()) {
+					std::string path = APISENDER_PATH "/";
+					d[spacename] = base64_encode(
+						jsonfile::parse(
+							jsonfile::readJsonFile(path + "/" + spacename + ".txt")));
+				}
+				cloud["raw"] = base64_encode(
+					jsonfile::parse(d));
+				std::cout << "Response " << apisender::runawork(cloud, "push", "cloud", true);
+			}
+			else if (command_2 == "pull") {
+				std::string doublecheck;
+				std::cout << "This Command Will COVER Now, Are you sure?(Only 'y')";
+				std::cin >> doublecheck;
+				if (doublecheck == "y") {
+					Json::Value d = jsonfile::parse(
+						apisender::runawork(cloud, "pull", "cloud", true));
+					for (const auto& spacename : d.getMemberNames()) {
+						Json::Value space;
+						space = jsonfile::parse(
+							base64_decode(
+								jsonfile::parse(
+									d[spacename])));
+						std::string path = APISENDER_PATH "/";
+						jsonfile::writeJsonFile(path + spacename + ".txt", space);
+					}
+					config = Json::nullValue;
 				}
 			}
 		}
