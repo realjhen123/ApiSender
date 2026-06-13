@@ -831,7 +831,7 @@ int main()
 			}
 			std::cin >> command_2;
 			if (command_2 == "cl") {
-				std::cout << "\ncloud help login push pull logout set uwork";
+				std::cout << "\ncloud help login push pull logout set uwork\n";
 			}
 			else if (command_2 == "assistant" || command_2 == "help") {
 				std::string i;
