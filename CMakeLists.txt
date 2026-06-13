@@ -14,9 +14,14 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(jsoncpp_lib STATIC
-    include/jsoncpp/jsoncpp.cpp
-)
+    include/jsoncpp/jsoncpp.cpp)
+
+add_library(cpp-base64 STATIC
+    include/cppbase64/base64.cpp
+    include/cppbase64/base64.h)
+
 target_include_directories(jsoncpp_lib PUBLIC include/jsoncpp)
+target_include_directories(cpp-base64 PUBLIC include/cppbase64)
 
 find_package(CURL QUIET)
 if(NOT CURL_FOUND AND VCPKG_ROOT)
@@ -49,5 +54,5 @@ elseif(NOT CURL_FOUND)
     )
 endif()
 
-add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h)
-target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib)
+add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h "src/Apisenderh.h" "include/cppbase64/base64.cpp" "include/cppbase64/base64.h")
+target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib cpp-base64)
