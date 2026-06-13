@@ -825,7 +825,7 @@ int main()
 				cloud["login"]["url"] = "$base /login";
 				cloud["login"]["response"]["stream"] = false;
 				cloud["login"]["response"]["type"] = "commandline";
-				cloud["login"]["method"] = "GET";
+				cloud["login"]["method"] = "POST";
 
 				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
 			}
