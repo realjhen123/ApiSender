@@ -878,6 +878,10 @@ int main()
 					<< "cloud set\n"
 					<< "cloud clear\n";
 				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
+
+				std::ofstream of(APISENDER_PATH "/cloud.json",std::ios::out);
+				of << jsonfile::parse(cloud);
+				of.close();
 			}
 			else if (command_2 == "clear") {
 				cloud = Json::nullValue;
