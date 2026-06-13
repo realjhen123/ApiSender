@@ -830,31 +830,58 @@ int main()
 				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
 			}
 			std::cin >> command_2;
-			if (command_2 == "help") {
+			if (command_2 == "cl") {
 				std::cout << "\ncloud help login push pull logout set uwork";
 			}
-			else if (command_2 == "login") {
-				std::string lo;
-				//std::cout << "=====cloud asssistant======\n";
-				std::cout << "Login with token?(y or n):";
-				std::cin >> lo;
-				if (apisender::stringcompare(lo,"y") || apisender::stringcompare(lo, "yes")) {
-					std::cout << "Pay A Attention, Token will be save in UNENCRYPTED way.\n";
-					std::cout << "So You can new a dedicated token to object \"APISENDER_CLOUD\"";
-					std::cout << "Please Input Your Token:\n";
-					std::string token;
-					std::cin >> token;
-					basicconfig["personal"]["cloud"]["token"] = token;
-					jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
+			else if (command_2 == "assistant" || command_2 == "help") {
+				std::string i;
+				std::cout << "=======Cloud Assistant=============\n"
+					<< "Input Your Base Url:\n";
+				std::cin >> i;
+				cloud["base_url"] = i;
+				std::cout << "Input Your Login Route:\n";
+				std::cin >> i;
+				cloud["login"]["url"] = "$base " + i;
+				std::cout << "Input Your Pull Route:\n";
+				std::cin >> i;
+				cloud["pull"]["url"] = "$base " + i;
+				std::cout << "Input Your Push Route:\n";
+				std::cin >> i;
+				cloud["push"]["url"] = "$base " + i;
+				std::cout << "Using Username and Password? (Confirm y or n):";
+				std::cin >> i;
+				if (i == "y" || i == "Y") {
+					std::cout << "Pay a Attention ,Your Password and Username will be a unencrypted way to save on file\n";
+					std::cout << "Please confirm that the compromise of this username and password is not a concern for you.Because it Storing in PLAINTEXT.\n";
+					std::cout << "Or You can using $(INPUT) on username or password ,To set up Input username or password When needed\n";
+					std::cout << "Using $(INPUT)? (y or n)\n";
+					std::string j;
+					std::cin >> j;
+					if (j == "y") {
+						cloud["login"]["request"]["body"]["username"] = "$(INPUT)";
+						cloud["login"]["request"]["body"]["password"] = "$(INPUT)";
+					}
+					else {
+						std::cout << "Input Your Username:";
+						std::cin >> i;
+						cloud["login"]["request"]["body"]["username"] = i;
+						std::cout << "Input Your Password:";
+						std::cin >> i;
+						cloud["login"]["request"]["body"]["password"] = i;
+					}
 				}
-				else {
-					std::string username, password;
-					std::cout << "Please Input Username:";
-					std::cin >> username;
-					std::cout << "Please Input Password:";
-					std::cin >> password;
-					CurlClient clogin;
-				}
+				std::cout << "So as to set up in detailed ,using cloud set and just like other apisender's apis\n";
+				std::cout << "Here some commands\n";
+				std::cout << "cloud push\n"
+					<< "cloud pull\n"
+					<< "cloud assistant\n"
+					<< "cloud set\n"
+					<< "cloud clear\n";
+				jsonfile::writeJsonFile(APISENDER_PATH "./cloud.json", cloud);
+			}
+			else if (command_2 == "clear") {
+				cloud = Json::nullValue;
+				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
 			}
 			else if (command_2 == "set") {
 #ifdef _WIN32
@@ -878,7 +905,7 @@ int main()
 					}
 					cloud["raw"] = base64_encode(
 						jsonfile::parse(d));
-					std::cout << apisender::runawork(cloud, "push", "cloud", true) << "\n";
+					apisender::runawork(cloud, "push", "cloud", true);
 				}
 			}
 			else if (command_2 == "pull") {
