@@ -922,7 +922,7 @@ int main()
 									d[spacename].asString()));
 						std::string path = APISENDER_PATH "/";
 						jsonfile::writeJsonFile(path + spacename + ".txt", space);
-						basicconfig["Apis"][spacename] = "";
+						basicconfig["Apis"][spacename] = Json::nullValue;
 					}
 					config = Json::nullValue;
 				}
