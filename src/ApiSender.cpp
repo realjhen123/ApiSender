@@ -22,7 +22,10 @@
 #ifndef APISENDER_PATH
 	#define APISENDER_PATH ".ApiSender"
 #endif
+
 #define SUCCEED 1
+#define APISENDER_VERSION "1.0.0"
+#define APISENDER_VERSION_KIND "beta"
 
 bool ui = true;
 bool ez = false;
@@ -712,6 +715,8 @@ int main()
 		}
 		else if (command_1 == "version" || command_1 == "v") {
 			std::cout << "Compile: " << __DATE__ << " " << __TIME__ << "\n";
+			std::cout << "Version: " << APISENDER_VERSION << "\n";
+			std::cout << "Version Kind: " << APISENDER_VERSION_KIND << "\n";
 		}
 #ifdef APISENDER_STRESS_TESTING
 		else if (command_1 == "stress") {
