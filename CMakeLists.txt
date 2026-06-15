@@ -53,6 +53,7 @@ elseif(NOT CURL_FOUND)
         "  vcpkg install curl        (cross-platform)"
     )
 endif()
+find_package(ZLIB REQUIRED)
 
 add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h "src/Apisenderh.h" "include/cppbase64/base64.cpp" "include/cppbase64/base64.h")
-target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib cpp-base64)
+target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib cpp-base64 ZLIB::ZLIB)
