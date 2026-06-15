@@ -472,7 +472,7 @@ namespace apisender {
 		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
 	}
 #endif
-	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence, apisender::ASRCloud cloud_ = apisender::ASRCloud::ASRCloud()) {
+	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence, apisender::ASRCloud cloud_ = apisender::ASRCloud()) {
 		/*
 		*config_
 		* working
