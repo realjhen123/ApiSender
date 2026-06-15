@@ -192,6 +192,10 @@ static std::string getReadableTime() {
 	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &localTime);
 	return std::string(buf);
 }
+static std::string outputbool(bool A_) {
+	if (A_)return std::string("True");
+	else return std::string("False");
+}
 namespace apisender {
 #ifdef APISENDER_STRESS_TESTING
 	enum LogType {
@@ -283,9 +287,14 @@ namespace apisender {
 		}
 	};
 #endif
+	static long long msc() {
+		auto now = std::chrono::system_clock::now();
+		auto duration = now.time_since_epoch();
+		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+		return milliseconds.count();
+	}
 	bool stringcompare(std::string target_str,std::string compare_with) {
 		int i = 0;
-		const char a = (char)54;
 		for (char c : target_str) {
 			if ((compare_with[i] == c + 32) || (compare_with[i] == c - 32) || (compare_with[i] == c))i++;
 			else return false;
@@ -310,8 +319,152 @@ namespace apisender {
 			std::abort();
 		}
 	}
-	
-	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence) {
+#ifdef APISENDER_REMOTE_CLOUD
+	class ASRCloud {
+	private:
+		std::string cloudname;
+		bool usingcloud = false;
+	public:
+		Json::Value cloud;
+		Json::Value cloudconfig;
+		bool get_status();
+		std::string get_cloudpath();
+		std::string get_cloudname();
+		ASRCloud();
+		ASRCloud(std::string cloudname_);
+		void save();
+		void first_init();
+		void assistant();
+		void push(Json::Value bc_);
+		void pull(Json::Value& bc_);
+	};
+	std::string runawork(Json::Value config_, std::string working, std::string workspace, bool silence, apisender::ASRCloud cloud_);
+	bool ASRCloud::get_status() { return usingcloud; };
+	std::string ASRCloud::get_cloudpath() {
+			std::string path = ".ApiSender";
+			path += "/";
+			path += cloudname;
+			return path;
+		}
+	std::string ASRCloud::get_cloudname() { return this->cloudname; }
+	ASRCloud::ASRCloud() { this->usingcloud = false; };
+	ASRCloud::ASRCloud(std::string cloudname_) {
+			this->cloudname = cloudname_;
+			this->cloud = jsonfile::readJsonFile(this->get_cloudpath());
+			this->usingcloud = true;
+		}
+	void ASRCloud::save() {
+			std::ofstream of(this->get_cloudpath());
+			of << jsonfile::parse(cloud);
+			of.close();
+		}
+	void ASRCloud::first_init() {
+			cloud["base_url"] = "";
+			cloud["cloud"] = "this";
+
+			cloud["push"]["request"]["body"]["data"] = "$(D)";
+			cloud["push"]["request"]["body"]["object"] = "APISENDER_CLOUD";
+			cloud["push"]["request"]["body"]["token"] = "$(`login)";
+			cloud["push"]["request"]["header"] = Json::nullValue;
+			cloud["push"]["url"] = "$base /push";
+			cloud["push"]["response"]["stream"] = false;
+			cloud["push"]["response"]["type"] = "commandline";
+			cloud["push"]["method"] = "POST";
+
+			cloud["pull"]["request"]["body"]["object"] = "APISENDER_CLOUD";
+			cloud["pull"]["request"]["body"]["token"] = "$(`login)";
+			cloud["pull"]["request"]["header"] = Json::nullValue;
+			cloud["pull"]["url"] = "$base /pull";
+			cloud["pull"]["response"]["stream"] = false;
+			cloud["pull"]["response"]["type"] = "commandline";
+			cloud["pull"]["method"] = "GET";
+
+			cloud["login"]["request"]["body"]["username"] = "";
+			cloud["login"]["request"]["body"]["password"] = "";
+			cloud["login"]["request"]["header"] = Json::nullValue;
+			cloud["login"]["url"] = "$base /login";
+			cloud["login"]["response"]["stream"] = false;
+			cloud["login"]["response"]["type"] = "commandline";
+			cloud["login"]["method"] = "POST";
+
+			this->cloudname = "cloud.json";
+			this->save();
+		}
+	void ASRCloud::assistant() {
+			std::string i;
+			std::cout << "=======Cloud Assistant=============\n"
+				<< "Input Your Base Url:\n";
+			std::cin >> i;
+			cloud["base_url"] = i;
+			std::cout << "Input Your Login Route:\n";
+			std::cin >> i;
+			cloud["login"]["url"] = "$base " + i;
+			std::cout << "Input Your Pull Route:\n";
+			std::cin >> i;
+			cloud["pull"]["url"] = "$base " + i;
+			std::cout << "Input Your Push Route:\n";
+			std::cin >> i;
+			cloud["push"]["url"] = "$base " + i;
+			std::cout << "Using Username and Password? (Confirm y or n):";
+			std::cin >> i;
+			if (i == "y" || i == "Y") {
+				std::cout << "Pay a Attention ,Your Password and Username will be a unencrypted way to save on file\n";
+				std::cout << "Please confirm that the compromise of this username and password is not a concern for you.Because it Storing in PLAINTEXT.\n";
+				std::cout << "Or You can using $(INPUT) on username or password ,To set up Input username or password When needed\n";
+				std::cout << "Using $(INPUT)? (y or n)\n";
+				std::string j;
+				std::cin >> j;
+				if (j == "y") {
+					cloud["login"]["request"]["body"]["username"] = "$(INPUT)";
+					cloud["login"]["request"]["body"]["password"] = "$(INPUT)";
+				}
+				else {
+					std::cout << "Input Your Username:";
+					std::cin >> i;
+					cloud["login"]["request"]["body"]["username"] = i;
+					std::cout << "Input Your Password:";
+					std::cin >> i;
+					cloud["login"]["request"]["body"]["password"] = i;
+				}
+			}
+			std::cout << "So as to set up in detailed ,using cloud set and just like other apisender's apis\n";
+			std::cout << "Here some commands\n";
+			std::cout << "cloud push\n"
+				<< "cloud pull\n"
+				<< "cloud assistant\n"
+				<< "cloud set\n"
+				<< "cloud clear\n";
+			this->save();
+		}
+	void ASRCloud::push(Json::Value bc_) {
+		Json::Value d;
+		for (const auto& spacename : bc_["Apis"].getMemberNames()) {
+			std::string path = APISENDER_PATH "/";
+			d[spacename] = base64_encode(
+				jsonfile::parse(
+					jsonfile::readJsonFile(path + "/" + spacename + ".txt")));
+		}
+		d["APISENDER_TIME_COUNT"] = std::to_string(apisender::msc());
+		this->cloudconfig["raw"] = base64_encode(
+			jsonfile::parse(d));
+		apisender::runawork(this->cloud, "push", "cloud", true, *this);
+	}
+	void ASRCloud::pull(Json::Value& bc_) {
+			Json::Value d = jsonfile::parse(base64_decode(apisender::runawork(cloud, "pull", "cloud", true, *this)));
+			for (const auto& spacename : d.getMemberNames()) {
+				Json::Value space;
+				space = jsonfile::parse(
+					base64_decode(
+						d[spacename].asString()));
+				std::string path = APISENDER_PATH "/";
+				if (spacename != "APISEDNER_TIME_COUNT") {
+					jsonfile::writeJsonFile(path + spacename + ".txt", space);
+					bc_["Apis"][spacename] = Json::nullValue;
+				}
+			}
+		}
+#endif
+	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence, apisender::ASRCloud cloud_ = apisender::ASRCloud::ASRCloud()) {
 		/*
 		*config_
 		* working
@@ -335,10 +488,8 @@ namespace apisender {
 		if (target_url.find("$base") != std::string::npos) {
 			std::string t_url = target_url.substr(target_url.find("base") + target_url.size() == 5 ? 5 : 6);
 			target_url = config_["base_url"].asString() + t_url;
-		}
-		if (config_[working]["method"].asString() == "get" || 
-			config_[working]["method"].asString() == "Get" || 
-			config_[working]["method"].asString() == "GET") {
+		} 
+		if (apisender::stringcompare(config_[working]["method"].asString(),"get")) {
 			std::string req = "?";
 			if (config_[working]["request"]["body"].isObject()) {
 				for (const auto& it : config_[working]["request"]["body"].getMemberNames()) {
@@ -355,9 +506,6 @@ namespace apisender {
 				res
 			);
 		}
-		//else if (config_[working]["method"].asString() == "post" ||
-		//	config_[working]["method"].asString() == "Post" ||
-		//	config_[working]["method"].asString() == "POST") {
 		else if (stringcompare(config_[working]["method"].asString(),"post")) {
 			std::string req;
 			if (config_[working]["request"]["body"].isObject()) {
@@ -384,9 +532,12 @@ namespace apisender {
 								target_spacename = "ApiSender";
 							}
 							target_space = APISENDER_PATH;
+
+							//if not define APISENDER_REMOTE_CLOUD
+							//also exist target_sapce += "/" + target_spacename + ".txt";
 #ifdef APISENDER_REMOTE_CLOUD
-							if (config_.get("cloud", "no") == "this") {
-								target_space += "/cloud.json";
+							if (cloud_.get_status()) {
+								target_space = cloud_.get_cloudpath();
 							}
 							else {
 #endif
@@ -407,7 +558,10 @@ namespace apisender {
 						}
 #ifdef APISENDER_REMOTE_CLOUD
 						else if (h_s == "$(D)") {
-							req_json[h_] = config_["raw"];
+							if (cloud_.get_status()) {
+								req_json[h_] = cloud_.cloudconfig["raw"];
+							}
+							
 						}
 #endif 
 					}
@@ -432,6 +586,7 @@ namespace apisender {
 			);
 		}
 		if (silence)return res;
+		
 		if (config_[working]["response"]["type"] == "commandline") {
 			if (!cc.stream)std::cout << "Response:" << std::endl;
 			if (!cc.stream)std::cout << res << std::endl;
@@ -455,11 +610,9 @@ namespace apisender {
 		showheader = true;
 		return res;
 	}
+
 }
-static std::string outputbool(bool A_) {
-	if (A_)return std::string("True");
-	else return std::string("False");
-}
+
 static void showBanner(std::string workspace_, std::string working_) {
 	if (!ui)return;
 	std::cout << "workspace:\t" << workspace_ << std::endl
@@ -522,9 +675,14 @@ int main()
 	history = basicconfig["personal"].get("history", false).asBool();
 	showBanner(workname, working);
 	std::cout << ">";
-	std::cin >> command_1;
 	Json::Value config;
 	CurlClient cc;
+#ifdef APISENDER_REMOTE_CLOUD
+	apisender::ASRCloud cloud(
+		basicconfig["personal"].get("cloudname", "cloud.json").asString()
+	);
+#endif
+	std::cin >> command_1;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
 			config = Json::nullValue;
@@ -802,8 +960,9 @@ int main()
 #endif
 #ifdef APISENDER_REMOTE_CLOUD
 		else if (command_1 == "cloud") {
-			Json::Value cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
-			if (cloud == Json::nullValue) {
+			//Json::Value cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
+			if (cloud.cloud == Json::nullValue) {
+				/*
 				cloud["base_url"] = "";
 				cloud["cloud"] = "this";
 
@@ -833,12 +992,16 @@ int main()
 				cloud["login"]["method"] = "POST";
 
 				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
+				*/
+				cloud.first_init();
 			}
 			std::cin >> command_2;
 			if (command_2 == "cl") {
 				std::cout << "\ncloud help login push pull logout set uwork\n";
 			}
 			else if (command_2 == "assistant" || command_2 == "help") {
+				cloud.assistant();
+				/*
 				std::string i;
 				std::cout << "=======Cloud Assistant=============\n"
 					<< "Input Your Base Url:\n";
@@ -887,7 +1050,9 @@ int main()
 				std::ofstream of(APISENDER_PATH "/cloud.json",std::ios::out);
 				of << jsonfile::parse(cloud);
 				of.close();
+				*/
 			}
+			/*
 			else if (command_2 == "clear") {
 				cloud = Json::nullValue;
 				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
@@ -899,12 +1064,15 @@ int main()
 				system((std::string("vim ") + APISENDER_PATH "/cloud.json").c_str());
 #endif
 				cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
-			}
+			}*/
 			else if (command_2 == "push") {
+				
 				std::string doublecheck;
 				std::cout << "This Command Will COVER remote, Are you sure?(Only 'y')";
 				std::cin >> doublecheck;
 				if (doublecheck == "y") {
+					cloud.push(basicconfig);
+					/*
 					Json::Value d;
 					for (const auto& spacename : basicconfig["Apis"].getMemberNames()) {
 						std::string path = APISENDER_PATH "/";
@@ -915,6 +1083,8 @@ int main()
 					cloud["raw"] = base64_encode(
 						jsonfile::parse(d));
 					apisender::runawork(cloud, "push", "cloud", true);
+					*/
+					
 				}
 			}
 			else if (command_2 == "pull") {
@@ -922,6 +1092,7 @@ int main()
 				std::cout << "This Command Will COVER Now, Are you sure?(Only 'y')";
 				std::cin >> doublecheck;
 				if (doublecheck == "y") {
+					/*
 					basicconfig["Apis"] = Json::nullValue;
 					Json::Value d = jsonfile::parse(base64_decode(apisender::runawork(cloud, "pull", "cloud", true)));
 					for (const auto& spacename : d.getMemberNames()) {
@@ -934,6 +1105,8 @@ int main()
 						basicconfig["Apis"][spacename] = Json::nullValue;
 					}
 					config = Json::nullValue;
+					*/
+					cloud.pull(basicconfig);
 				}
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 			}
