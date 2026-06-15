@@ -447,6 +447,8 @@ namespace apisender {
 					jsonfile::readJsonFile(path + "/" + spacename + ".txt")));
 		}
 		d["APISENDER_TIME_COUNT"] = std::to_string(apisender::msc());
+		d["APISENDER_U_WORKING"] = bc_["personal"]["u"]["working"].asString();
+		d["APISENDER_U_WORKSPACE"] = bc_["personal"]["u"]["workspace"].asString();
 		std::string rawstr = base64_encode(
 			jsonfile::parse(d));
 		this->cloudconfig["raw"] = gzip::compress(rawstr.data(), rawstr.size(),7);
@@ -454,22 +456,24 @@ namespace apisender {
 	}
 	void ASRCloud::pull(Json::Value& bc_) {
 		std::string rawstr = apisender::runawork(cloud, "pull", "cloud", true, *this);
-			Json::Value d = jsonfile::parse(
-				base64_decode(
-					gzip::decompress(rawstr.data(),rawstr.size())
-					));
-			for (const auto& spacename : d.getMemberNames()) {
-				Json::Value space;
-				if (spacename != "APISENDER_TIME_COUNT") {
-					space = jsonfile::parse(
-						base64_decode(
-							d[spacename].asString()));
-					std::string path = APISENDER_PATH "/";
-					jsonfile::writeJsonFile(path + spacename + ".txt", space);
-					bc_["Apis"][spacename] = Json::nullValue;
-				}
+		Json::Value d = jsonfile::parse(
+			base64_decode(
+				gzip::decompress(rawstr.data(), rawstr.size())
+			));
+		for (const auto& spacename : d.getMemberNames()) {
+			Json::Value space;
+			if (spacename.find("APISENDER_") == std::string::npos) {
+				space = jsonfile::parse(
+					base64_decode(
+						d[spacename].asString()));
+				std::string path = APISENDER_PATH "/";
+				jsonfile::writeJsonFile(path + spacename + ".txt", space);
+				bc_["Apis"][spacename] = Json::nullValue;
 			}
 		}
+		bc_["personal"]["u"]["working"] = d["APISENDER_U_WORKING"];
+		bc_["personal"]["u"]["workspace"] = d["APISENDER_U_WORKSPACE"];
+	}
 	long long ASRCloud::get_cloud_msc()
 	{
 		Json::Value res = jsonfile::parse(apisender::runawork(this->cloud, "pull", "cloud", true,apisender::ASRCloud()));
@@ -1002,7 +1006,6 @@ int main(int argc, char* argv[])
 				cloud.assistant();
 			}
 			else if (command_2 == "push") {
-				
 				std::string doublecheck;
 				std::cout << "This Command Will COVER remote, Are you sure?(Only 'y')";
 				std::cin >> doublecheck;
@@ -1011,15 +1014,17 @@ int main(int argc, char* argv[])
 				}
 			}
 			else if (command_2 == "pull") {
-				std::string doublecheck;
-				std::cout << "This Command Will COVER Now, Are you sure?(Only 'y')";
-				std::cin >> doublecheck;
-				if (doublecheck == "y") {
-					cloud.pull(basicconfig);
-					
-				}
+				cloud.pull(basicconfig);
 				basicconfig["personal"]["Lpull"] = std::to_string(cloud.get_cloud_msc());
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
+			}
+			else if (command_2 == "u") {
+				cloud.pull(basicconfig);
+				command_1 = "u";
+				command_2 = "";
+				command_3 = "";
+				command_4 = "";
+				goto NO_INPUT_COMMAND;
 			}
 			clearMonitor();
 			showBanner(workname, working, config);
@@ -1031,6 +1036,7 @@ int main(int argc, char* argv[])
 		command_4 = "";
 		std::cout << ">";
 		std::cin >> command_1;
+		NO_INPUT_COMMAND:
 	}
 	if (working != "" && workname != "") {
 		basicconfig["personal"]["u"]["working"] = working;
