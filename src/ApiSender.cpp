@@ -1010,6 +1010,8 @@ int main(int argc, char* argv[])
 				std::cout << "This Command Will COVER remote, Are you sure?(Only 'y')";
 				std::cin >> doublecheck;
 				if (doublecheck == "y") {
+					basicconfig["personal"]["u"]["working"] = working;
+					basicconfig["personal"]["u"]["workspace"] = workname;
 					cloud.push(basicconfig);
 				}
 			}
