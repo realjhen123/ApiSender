@@ -1036,7 +1036,7 @@ int main(int argc, char* argv[])
 		command_4 = "";
 		std::cout << ">";
 		std::cin >> command_1;
-		NO_INPUT_COMMAND:
+	NO_INPUT_COMMAND:;
 	}
 	if (working != "" && workname != "") {
 		basicconfig["personal"]["u"]["working"] = working;
