@@ -21,17 +21,9 @@ add_library(cpp-base64 STATIC
     include/cppbase64/base64.cpp
     include/cppbase64/base64.h)
 
-add_library(gzip-hpp STATIC 
-    include/gzip-hpp/compress.hpp
-    include/gzip-hpp/decompress.hpp
-    include/gzip-hpp/utils.hpp
-    include/gzip-hpp/version.hpp
-    include/gzip-hpp/config.hpp)
-
-
 target_include_directories(jsoncpp_lib PUBLIC include/jsoncpp)
 target_include_directories(cpp-base64 PUBLIC include/cppbase64)
-target_include_directories(gzip-hpp PUBLIC include/gzip-hpp)
+target_include_directories(ApiSender PUBLIC include/gzip-hpp)
 
 find_package(CURL QUIET)
 if(NOT CURL_FOUND AND VCPKG_ROOT)
@@ -64,6 +56,5 @@ elseif(NOT CURL_FOUND)
     )
 endif()
 
-
-add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h "src/Apisenderh.h" "include/cppbase64/base64.cpp" "include/cppbase64/base64.h")
-target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib cpp-base64 ZLIB::ZLIB gzip-hpp)
+add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h "src/Apisenderh.h")
+target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib cpp-base64 ZLIB::ZLIB)

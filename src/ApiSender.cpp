@@ -1012,6 +1012,7 @@ int main(int argc, char* argv[])
 				std::cin >> doublecheck;
 				if (doublecheck == "y") {
 					cloud.pull(basicconfig);
+					
 				}
 				basicconfig["personal"]["Lpull"] = std::to_string(cloud.get_cloud_msc());
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);

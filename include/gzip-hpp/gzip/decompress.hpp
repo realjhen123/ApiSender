@@ -1,4 +1,4 @@
-#include "gzip-hpp/config.hpp"
+#include <gzip/config.hpp>
 
 // zlib
 #include <zlib.h>
