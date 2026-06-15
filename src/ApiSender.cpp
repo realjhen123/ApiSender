@@ -960,39 +960,7 @@ int main()
 #endif
 #ifdef APISENDER_REMOTE_CLOUD
 		else if (command_1 == "cloud") {
-			//Json::Value cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
 			if (cloud.cloud == Json::nullValue) {
-				/*
-				cloud["base_url"] = "";
-				cloud["cloud"] = "this";
-
-				cloud["push"]["request"]["body"]["data"] = "$(D)";
-				cloud["push"]["request"]["body"]["object"] = "APISENDER_CLOUD";
-				cloud["push"]["request"]["body"]["token"] = "$(`login)";
-				cloud["push"]["request"]["header"] = Json::nullValue;
-				cloud["push"]["url"] = "$base /push";
-				cloud["push"]["response"]["stream"] = false;
-				cloud["push"]["response"]["type"] = "commandline";
-				cloud["push"]["method"] = "POST";
-
-				cloud["pull"]["request"]["body"]["object"] = "APISENDER_CLOUD";
-				cloud["pull"]["request"]["body"]["token"] = "$(`login)";
-				cloud["pull"]["request"]["header"] = Json::nullValue;
-				cloud["pull"]["url"] = "$base /pull";
-				cloud["pull"]["response"]["stream"] = false;
-				cloud["pull"]["response"]["type"] = "commandline";
-				cloud["pull"]["method"] = "GET";
-
-				cloud["login"]["request"]["body"]["username"] = "";
-				cloud["login"]["request"]["body"]["password"] = "";
-				cloud["login"]["request"]["header"] = Json::nullValue;
-				cloud["login"]["url"] = "$base /login";
-				cloud["login"]["response"]["stream"] = false;
-				cloud["login"]["response"]["type"] = "commandline";
-				cloud["login"]["method"] = "POST";
-
-				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
-				*/
 				cloud.first_init();
 			}
 			std::cin >> command_2;
@@ -1001,70 +969,7 @@ int main()
 			}
 			else if (command_2 == "assistant" || command_2 == "help") {
 				cloud.assistant();
-				/*
-				std::string i;
-				std::cout << "=======Cloud Assistant=============\n"
-					<< "Input Your Base Url:\n";
-				std::cin >> i;
-				cloud["base_url"] = i;
-				std::cout << "Input Your Login Route:\n";
-				std::cin >> i;
-				cloud["login"]["url"] = "$base " + i;
-				std::cout << "Input Your Pull Route:\n";
-				std::cin >> i;
-				cloud["pull"]["url"] = "$base " + i;
-				std::cout << "Input Your Push Route:\n";
-				std::cin >> i;
-				cloud["push"]["url"] = "$base " + i;
-				std::cout << "Using Username and Password? (Confirm y or n):";
-				std::cin >> i;
-				if (i == "y" || i == "Y") {
-					std::cout << "Pay a Attention ,Your Password and Username will be a unencrypted way to save on file\n";
-					std::cout << "Please confirm that the compromise of this username and password is not a concern for you.Because it Storing in PLAINTEXT.\n";
-					std::cout << "Or You can using $(INPUT) on username or password ,To set up Input username or password When needed\n";
-					std::cout << "Using $(INPUT)? (y or n)\n";
-					std::string j;
-					std::cin >> j;
-					if (j == "y") {
-						cloud["login"]["request"]["body"]["username"] = "$(INPUT)";
-						cloud["login"]["request"]["body"]["password"] = "$(INPUT)";
-					}
-					else {
-						std::cout << "Input Your Username:";
-						std::cin >> i;
-						cloud["login"]["request"]["body"]["username"] = i;
-						std::cout << "Input Your Password:";
-						std::cin >> i;
-						cloud["login"]["request"]["body"]["password"] = i;
-					}
-				}
-				std::cout << "So as to set up in detailed ,using cloud set and just like other apisender's apis\n";
-				std::cout << "Here some commands\n";
-				std::cout << "cloud push\n"
-					<< "cloud pull\n"
-					<< "cloud assistant\n"
-					<< "cloud set\n"
-					<< "cloud clear\n";
-				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
-
-				std::ofstream of(APISENDER_PATH "/cloud.json",std::ios::out);
-				of << jsonfile::parse(cloud);
-				of.close();
-				*/
 			}
-			/*
-			else if (command_2 == "clear") {
-				cloud = Json::nullValue;
-				jsonfile::writeJsonFile(APISENDER_PATH "/cloud.json", cloud);
-			}
-			else if (command_2 == "set") {
-#ifdef _WIN32
-				system((std::string("notepad ") + APISENDER_PATH "/cloud.json").c_str());
-#elif __linux__
-				system((std::string("vim ") + APISENDER_PATH "/cloud.json").c_str());
-#endif
-				cloud = jsonfile::readJsonFile(APISENDER_PATH "/cloud.json");
-			}*/
 			else if (command_2 == "push") {
 				
 				std::string doublecheck;
@@ -1072,19 +977,6 @@ int main()
 				std::cin >> doublecheck;
 				if (doublecheck == "y") {
 					cloud.push(basicconfig);
-					/*
-					Json::Value d;
-					for (const auto& spacename : basicconfig["Apis"].getMemberNames()) {
-						std::string path = APISENDER_PATH "/";
-						d[spacename] = base64_encode(
-							jsonfile::parse(
-								jsonfile::readJsonFile(path + "/" + spacename + ".txt")));
-					}
-					cloud["raw"] = base64_encode(
-						jsonfile::parse(d));
-					apisender::runawork(cloud, "push", "cloud", true);
-					*/
-					
 				}
 			}
 			else if (command_2 == "pull") {
@@ -1092,20 +984,6 @@ int main()
 				std::cout << "This Command Will COVER Now, Are you sure?(Only 'y')";
 				std::cin >> doublecheck;
 				if (doublecheck == "y") {
-					/*
-					basicconfig["Apis"] = Json::nullValue;
-					Json::Value d = jsonfile::parse(base64_decode(apisender::runawork(cloud, "pull", "cloud", true)));
-					for (const auto& spacename : d.getMemberNames()) {
-						Json::Value space;
-						space = jsonfile::parse(
-							base64_decode(
-									d[spacename].asString()));
-						std::string path = APISENDER_PATH "/";
-						jsonfile::writeJsonFile(path + spacename + ".txt", space);
-						basicconfig["Apis"][spacename] = Json::nullValue;
-					}
-					config = Json::nullValue;
-					*/
 					cloud.pull(basicconfig);
 				}
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
