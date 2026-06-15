@@ -337,6 +337,7 @@ namespace apisender {
 		void assistant();
 		void push(Json::Value bc_);
 		void pull(Json::Value& bc_);
+		long long get_cloud_msc();
 	};
 	std::string runawork(Json::Value config_, std::string working, std::string workspace, bool silence, apisender::ASRCloud cloud_);
 	bool ASRCloud::get_status() { return usingcloud; };
@@ -463,6 +464,11 @@ namespace apisender {
 				}
 			}
 		}
+	long long ASRCloud::get_cloud_msc()
+	{
+		Json::Value res = jsonfile::parse(apisender::runawork(this->cloud, "pull", "cloud", true));
+		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
+	}
 #endif
 	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence, apisender::ASRCloud cloud_ = apisender::ASRCloud::ASRCloud()) {
 		/*
@@ -988,6 +994,11 @@ int main()
 				}
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 			}
+			else if (command_2 == "sync") {
+				
+			}
+			clearMonitor();
+			showBanner(workname, working, config);
 		}
 #endif
 		command_1 = "";
