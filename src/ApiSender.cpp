@@ -447,13 +447,17 @@ namespace apisender {
 					jsonfile::readJsonFile(path + "/" + spacename + ".txt")));
 		}
 		d["APISENDER_TIME_COUNT"] = std::to_string(apisender::msc());
-		this->cloudconfig["raw"] = base64_encode(
+		std::string rawstr = base64_encode(
 			jsonfile::parse(d));
-		std::cout << apisender::runawork(this->cloud, "push", "cloud", true, *this);
+		this->cloudconfig["raw"] = gzip::compress(rawstr.data(), rawstr.size(),7);
+		apisender::runawork(this->cloud, "push", "cloud", true, *this);
 	}
 	void ASRCloud::pull(Json::Value& bc_) {
-			Json::Value d = jsonfile::parse(base64_decode(apisender::runawork(cloud, "pull", "cloud", true, *this)));
-			std::string a = base64_decode(apisender::runawork(cloud, "pull", "cloud", true, *this));
+		std::string rawstr = apisender::runawork(cloud, "pull", "cloud", true, *this);
+			Json::Value d = jsonfile::parse(
+				base64_decode(
+					gzip::decompress(rawstr.data(),rawstr.size())
+					));
 			for (const auto& spacename : d.getMemberNames()) {
 				Json::Value space;
 				if (spacename != "APISENDER_TIME_COUNT") {
