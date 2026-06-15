@@ -9,7 +9,7 @@ if(VCPKG_EXE)
 endif()
 
 project(ApiSender VERSION 1.0.0 LANGUAGES CXX)
-find_package(ZLIB REQUIRED)
+
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,7 +23,6 @@ add_library(cpp-base64 STATIC
 
 target_include_directories(jsoncpp_lib PUBLIC include/jsoncpp)
 target_include_directories(cpp-base64 PUBLIC include/cppbase64)
-target_include_directories(ApiSender PUBLIC include/gzip-hpp)
 
 find_package(CURL QUIET)
 if(NOT CURL_FOUND AND VCPKG_ROOT)
@@ -57,4 +56,7 @@ elseif(NOT CURL_FOUND)
 endif()
 
 add_executable(ApiSender src/ApiSender.cpp src/OptionalFeatures.h "src/Apisenderh.h")
+
+target_include_directories(ApiSender PUBLIC include/gzip-hpp)
+find_package(ZLIB REQUIRED)
 target_link_libraries(ApiSender PRIVATE CURL::libcurl jsoncpp_lib cpp-base64 ZLIB::ZLIB)
