@@ -12,3 +12,6 @@
 #include <chrono>
 #include <unordered_map>
 #include "base64.h"
+#include "gzip-hpp/compress.hpp"
+#include "gzip-hpp/decompress.hpp"
+#include "gzip-hpp/utils.hpp"
