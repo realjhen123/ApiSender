@@ -468,7 +468,7 @@ namespace apisender {
 		}
 	long long ASRCloud::get_cloud_msc()
 	{
-		Json::Value res = jsonfile::parse(apisender::runawork(this->cloud, "pull", "cloud", true,apisender::ASRCloud::ASRCloud()));
+		Json::Value res = jsonfile::parse(apisender::runawork(this->cloud, "pull", "cloud", true,apisender::ASRCloud()));
 		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
 	}
 #endif
