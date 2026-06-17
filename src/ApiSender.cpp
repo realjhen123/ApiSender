@@ -918,7 +918,7 @@ int main(int argc, char* argv[])
 				basicconfig["personal"]["autosync"] = autosync;
 			}
 			else if (command_2 == "udefault") {
-				if (command_2 == "remote")basicconfig["personal"]["u"]["U_default"] = command_4;
+				if (command_3 == "remote")basicconfig["personal"]["u"]["U_default"] = command_3;
 				else basicconfig["personal"]["u"]["U_default"] = "local";
 				U_default = basicconfig["personal"]["u"]["U_default"].asString();
 			}
