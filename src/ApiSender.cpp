@@ -24,7 +24,7 @@
 #endif
 
 #define SUCCEED 1
-#define APISENDER_VERSION "v2026.6.17.2"
+#define APISENDER_VERSION "v2026.6.17.3"
 #define APISENDER_VERSION_KIND "beta"
 
 bool ui = true;
@@ -661,8 +661,11 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
 		jsonfile::sep = "\t";
 	}
-	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui) << " AutoSync:" << outputbool(autosync);
-	std::cout << "\n=====Apisender=====" << std::endl;
+	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui) << std::endl;
+#ifdef APISENDER_REMOTE_CLOUD
+	std::cout << "AutoSync:" << outputbool(autosync) << " udefault:" << U_default << std::endl;
+#endif
+	std::cout << "=====Apisender=====" << std::endl;
 }
 static void clearMonitor() {
 	if (!ui)return;
@@ -679,7 +682,6 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
-		else if (c == "u")command_1 = "u";
 	}
 #ifdef _DEBUG
 	std::cout << "Debug";
@@ -710,7 +712,7 @@ int main(int argc, char* argv[])
 	if (autosync)cloud.pull(basicconfig);
 #endif
 	std::cout << ">";
-	if (command_1 != "")std::cin >> command_1;
+	std::cin >> command_1;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
 			config = Json::nullValue;
@@ -912,6 +914,9 @@ int main(int argc, char* argv[])
 			if (command_2 == "autosync") {
 				if (command_3 == "on") {
 					autosync = true;
+#ifdef APISENDER_REMOTE_CLOUD
+					cloud.pull(basicconfig);
+#endif
 				}
 				else if (command_3 == "off") {
 					autosync = false;
@@ -919,7 +924,7 @@ int main(int argc, char* argv[])
 				basicconfig["personal"]["autosync"] = autosync;
 			}
 			else if (command_2 == "udefault") {
-				if (command_2 == "remote")basicconfig["personal"]["u"]["U_default"] = command_4;
+				if (command_3 == "remote")basicconfig["personal"]["u"]["U_default"] = command_3;
 				else basicconfig["personal"]["u"]["U_default"] = "local";
 				U_default = basicconfig["personal"]["u"]["U_default"].asString();
 			}
@@ -1016,6 +1021,15 @@ int main(int argc, char* argv[])
 			if (command_2 == "cl") {
 				std::cout << "\ncloud help login push pull logout set uwork\n";
 			}
+			else if (command_2 == "set") {
+				std::string p = cloud.get_cloudpath();
+#ifdef _WIN32
+				system((std::string("notepad ") + p).c_str());
+#elif __linux__
+				system((std::string("vim ") + p).c_str());
+#endif
+				cloud.cloud = jsonfile::readJsonFile(cloud.get_cloudpath());
+			}
 			else if (command_2 == "assistant" || command_2 == "help") {
 				cloud.assistant();
 			}
@@ -1046,6 +1060,30 @@ int main(int argc, char* argv[])
 			showBanner(workname, working, config);
 		}
 #endif
+		else if (command_1 == "remove") {
+			std::cout << "Are you sure?";
+			std::cin >> command_2;
+			if (command_2 == "y") {
+				autosync = false;
+				basicconfig["personal"]["autosync"] = false;
+				for (std::string it : basicconfig["Apis"].getMemberNames()) {
+					std::string p = APISENDER_PATH;
+					p += "/";
+					p += it;
+					p += ".txt";
+					std::remove(p.c_str());
+					basicconfig["Apis"].removeMember(it);
+				}
+				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
+			}
+		}
+		else if (command_1 == "print") {
+			std::cin >> command_2;
+			if (command_2 == "config")std::cout << config.toStyledString();
+			else if (command_2 == "basicconfig")std::cout << basicconfig.toStyledString();
+			else if (command_2 == "cloud")std::cout << cloud.cloud.toStyledString();
+			else if (command_2 == "cloudconfig")std::cout << cloud.cloudconfig.toStyledString();
+		}
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
