@@ -914,7 +914,9 @@ int main(int argc, char* argv[])
 			if (command_2 == "autosync") {
 				if (command_3 == "on") {
 					autosync = true;
+#ifdef APISENDER_REMOTE_CLOUD
 					cloud.pull(basicconfig);
+#endif
 				}
 				else if (command_3 == "off") {
 					autosync = false;
