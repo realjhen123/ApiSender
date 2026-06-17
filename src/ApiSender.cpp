@@ -664,7 +664,7 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui) << std::endl;
 #ifdef APISENDER_REMOTE_CLOUD
 	std::cout << "AutoSync:" << outputbool(autosync) << " udefault:" << U_default << std::endl;
-#endif APISENDER_REMOTE_CLOUD
+#endif
 	std::cout << "=====Apisender=====" << std::endl;
 }
 static void clearMonitor() {
