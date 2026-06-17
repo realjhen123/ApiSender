@@ -1013,11 +1013,11 @@ int main(int argc, char* argv[])
 		}
 #endif
 #ifdef APISENDER_REMOTE_CLOUD
-		else if (command_1 == "cloud" || command_1 == "push") {
+		else if (command_1 == "cloud" || command_1 == "push" || command_1 == "pushy") {
 			if (cloud.cloud == Json::nullValue) {
 				cloud.first_init();
 			}
-			if (command_1 == "push")command_2 = "push";
+			if (command_1 == "push" || command_1 == "pushy")command_2 = "push";
 			else {
 				std::cin >> command_2;
 			}
@@ -1038,9 +1038,11 @@ int main(int argc, char* argv[])
 			}
 			else if (command_2 == "push") {
 				std::string doublecheck;
-				std::cout << "This Command Will COVER remote, Are you sure?(Only 'y')";
-				std::cin >> doublecheck;
-				if (doublecheck == "y") {
+				if (command_1 != "pushy") {	
+					std::cout << "This Command Will COVER remote, Are you sure?(Only 'y')";
+					std::cin >> doublecheck;
+				}
+				if (doublecheck == "y" || command_1 == "pushy") {
 					basicconfig["personal"]["u"]["working"] = working;
 					basicconfig["personal"]["u"]["workspace"] = workname;
 					cloud.push(basicconfig);
