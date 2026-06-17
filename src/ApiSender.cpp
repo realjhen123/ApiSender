@@ -695,8 +695,7 @@ int main(int argc, char* argv[])
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
 	jsonfile::sep = "  ";
-	if ((!basicconfig["personal"]["ui"].asBool()) && basicconfig["personal"]["ui"].isBool())ui = false;
-	else if (!basicconfig["personal"]["ui"].isBool()) { basicconfig["personal"]["ui"] = true; ui = true; };
+	ui = basicconfig["personal"].get("ui", true).asBool();
 	ez = basicconfig["personal"].get("ez", false).asBool();
 	history = basicconfig["personal"].get("history", false).asBool();
 	autosync = basicconfig["personal"].get("autosync", false).asBool();
