@@ -679,7 +679,6 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
-		else if (c == "u")command_1 = "u";
 	}
 #ifdef _DEBUG
 	std::cout << "Debug";
@@ -710,7 +709,7 @@ int main(int argc, char* argv[])
 	if (autosync)cloud.pull(basicconfig);
 #endif
 	std::cout << ">";
-	if (command_1 != "")std::cin >> command_1;
+	std::cin >> command_1;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
 			config = Json::nullValue;
