@@ -1013,11 +1013,14 @@ int main(int argc, char* argv[])
 		}
 #endif
 #ifdef APISENDER_REMOTE_CLOUD
-		else if (command_1 == "cloud") {
+		else if (command_1 == "cloud" || command_1 == "push") {
 			if (cloud.cloud == Json::nullValue) {
 				cloud.first_init();
 			}
-			std::cin >> command_2;
+			if (command_1 == "push")command_2 = "push";
+			else {
+				std::cin >> command_2;
+			}
 			if (command_2 == "cl") {
 				std::cout << "\ncloud help login push pull logout set uwork\n";
 			}
