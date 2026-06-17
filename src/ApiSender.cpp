@@ -1045,6 +1045,13 @@ int main(int argc, char* argv[])
 			showBanner(workname, working, config);
 		}
 #endif
+		else if (command_1 == "remove") {
+			std::cout << "Are you sure?";
+			std::cin >> command_2;
+			if (command_2 == "y") {
+				std::remove(APISENDER_PATH "/*.txt");
+			}
+		}
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
