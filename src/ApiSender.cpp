@@ -712,7 +712,7 @@ int main(int argc, char* argv[])
 	if (autosync)cloud.pull(basicconfig);
 #endif
 	std::cout << ">";
-	if (command_1 != "")std::cin >> command_1;
+	std::cin >> command_1;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
 			config = Json::nullValue;
