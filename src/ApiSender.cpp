@@ -703,7 +703,7 @@ int main(int argc, char* argv[])
 	ez = basicconfig["personal"].get("ez", false).asBool();
 	history = basicconfig["personal"].get("history", false).asBool();
 	autosync = basicconfig["personal"].get("autosync", false).asBool();
-	U_default = basicconfig["personal"]["u"].get("default", "local").asString();
+	U_default = basicconfig["personal"]["u"].get("U_default", "local").asString();
 	showBanner(workname, working);
 	Json::Value config;
 #ifdef APISENDER_REMOTE_CLOUD
