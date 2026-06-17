@@ -1021,6 +1021,16 @@ int main(int argc, char* argv[])
 			if (command_2 == "cl") {
 				std::cout << "\ncloud help login push pull logout set uwork\n";
 			}
+			else if (command_2 == "set") {
+				std::string p = APISENDER_PATH;
+				p += cloud.get_cloudpath();
+#ifdef _WIN32
+				system((std::string("notepad ") + p).c_str());
+#elif __linux__
+				system((std::string("vim ") + p).c_str());
+#endif
+				cloud.cloud = jsonfile::readJsonFile(cloud.get_cloudpath());
+			}
 			else if (command_2 == "assistant" || command_2 == "help") {
 				cloud.assistant();
 			}
