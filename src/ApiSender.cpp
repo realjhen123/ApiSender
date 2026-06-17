@@ -1049,7 +1049,17 @@ int main(int argc, char* argv[])
 			std::cout << "Are you sure?";
 			std::cin >> command_2;
 			if (command_2 == "y") {
-				std::remove(APISENDER_PATH "/*.txt");
+				autosync = false;
+				basicconfig["personal"]["autosync"] = false;
+				for (std::string it : basicconfig["Apis"].getMemberNames()) {
+					std::string p = APISENDER_PATH;
+					p += "/";
+					p += it;
+					p += ".txt";
+					std::remove(p.c_str());
+					basicconfig["Apis"].removeMember(it);
+				}
+				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 			}
 		}
 		command_1 = "";
