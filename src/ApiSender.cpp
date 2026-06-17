@@ -24,8 +24,8 @@
 #endif
 
 #define SUCCEED 1
-#define APISENDER_VERSION "v2026.6.15.2"
-#define APISENDER_VERSION_KIND "release"
+#define APISENDER_VERSION "v2026.6.17.2"
+#define APISENDER_VERSION_KIND "beta"
 
 bool ui = true;
 bool ez = false;
@@ -33,6 +33,7 @@ bool history = false;
 bool nevertimeout = true;
 bool showheader = true;
 bool autosync = false;
+std::string U_default;
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -198,7 +199,6 @@ static std::string outputbool(bool A_) {
 	else return std::string("False");
 }
 namespace apisender {
-#ifdef APISENDER_STRESS_TESTING
 	enum LogType {
 		NONE,
 		TRACE,
@@ -240,6 +240,7 @@ namespace apisender {
 			}
 		}
 	};
+#ifdef APISENDER_STRESS_TESTING
 	class stress_testing {
 	public:
 		bool status = true;
@@ -480,7 +481,12 @@ namespace apisender {
 		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
 	}
 #endif
-	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence, apisender::ASRCloud cloud_ = apisender::ASRCloud()) {
+	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence 
+#ifdef APISENDER_REMOTE_CLOUD
+		, apisender::ASRCloud cloud_ = apisender::ASRCloud() 
+#endif
+	) 
+	{
 		/*
 		*config_
 		* working
@@ -669,9 +675,11 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
+	std::string command_1 = "", command_2, command_3, command_4;
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
+		else if (c == "u")command_1 = "u";
 	}
 #ifdef _DEBUG
 	std::cout << "Debug";
@@ -684,19 +692,17 @@ int main(int argc, char* argv[])
 	apisender::error::initErrorInfo();
 	system("mkdir " APISENDER_PATH);
 	clearMonitor();
-	std::string command_1, command_2, command_3, command_4;
 	std::string workfile = APISENDER_PATH "/ApiSender.txt" , workname;
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
 	jsonfile::sep = "  ";
-	if ((!basicconfig["personal"]["ui"].asBool()) && basicconfig["personal"]["ui"].isBool())ui = false;
-	else if (!basicconfig["personal"]["ui"].isBool()) { basicconfig["personal"]["ui"] = true; ui = true; };
+	ui = basicconfig["personal"].get("ui", true).asBool();
 	ez = basicconfig["personal"].get("ez", false).asBool();
 	history = basicconfig["personal"].get("history", false).asBool();
 	autosync = basicconfig["personal"].get("autosync", false).asBool();
+	U_default = basicconfig["personal"]["u"].get("default", "local").asString();
 	showBanner(workname, working);
 	Json::Value config;
-	CurlClient cc;
 #ifdef APISENDER_REMOTE_CLOUD
 	apisender::ASRCloud cloud(
 		basicconfig["personal"].get("cloudname", "cloud.json").asString()
@@ -704,7 +710,7 @@ int main(int argc, char* argv[])
 	if (autosync)cloud.pull(basicconfig);
 #endif
 	std::cout << ">";
-	std::cin >> command_1;
+	if (command_1 != "")std::cin >> command_1;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
 			config = Json::nullValue;
@@ -874,6 +880,9 @@ int main(int argc, char* argv[])
 			std::cout << jsonfile::jsontoString(config[working], "  ") << std::endl;
 		}
 		else if (command_1 == "u") {
+#ifdef APISENDER_REMOTE_CLOUD
+			if (U_default == "remote")cloud.pull(basicconfig);
+#endif
 			working = basicconfig["personal"]["u"]["working"].asString();
 			workname = basicconfig["personal"]["u"]["workspace"].asString();
 			command_2 = workname;
@@ -908,6 +917,11 @@ int main(int argc, char* argv[])
 					autosync = false;
 				}
 				basicconfig["personal"]["autosync"] = autosync;
+			}
+			else if (command_2 == "udefault") {
+				if (command_2 == "remote")basicconfig["personal"]["u"]["U_default"] = command_4;
+				else basicconfig["personal"]["u"]["U_default"] = "local";
+				U_default = basicconfig["personal"]["u"]["U_default"].asString();
 			}
 			jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 		}
