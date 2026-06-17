@@ -701,7 +701,6 @@ int main(int argc, char* argv[])
 	autosync = basicconfig["personal"].get("autosync", false).asBool();
 	showBanner(workname, working);
 	Json::Value config;
-	CurlClient cc;
 #ifdef APISENDER_REMOTE_CLOUD
 	apisender::ASRCloud cloud(
 		basicconfig["personal"].get("cloudname", "cloud.json").asString()
