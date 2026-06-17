@@ -674,9 +674,11 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
+	std::string command_1 = "", command_2, command_3, command_4;
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
+		else if (c == "u")command_1 = "u";
 	}
 #ifdef _DEBUG
 	std::cout << "Debug";
@@ -689,7 +691,6 @@ int main(int argc, char* argv[])
 	apisender::error::initErrorInfo();
 	system("mkdir " APISENDER_PATH);
 	clearMonitor();
-	std::string command_1, command_2, command_3, command_4;
 	std::string workfile = APISENDER_PATH "/ApiSender.txt" , workname;
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
@@ -709,7 +710,7 @@ int main(int argc, char* argv[])
 	if (autosync)cloud.pull(basicconfig);
 #endif
 	std::cout << ">";
-	std::cin >> command_1;
+	if (command_1 != "")std::cin >> command_1;
 	while (command_1 != "q") {
 		if (command_1 == "init" || command_1 == "i") {
 			config = Json::nullValue;
