@@ -33,6 +33,7 @@ bool history = false;
 bool nevertimeout = true;
 bool showheader = true;
 bool autosync = false;
+std::string U_default;
 namespace jsonfile {
 	std::string sep = "\t";
 	static void writeFileFromString(const std::string filename, const std::string body) {
@@ -699,6 +700,7 @@ int main(int argc, char* argv[])
 	ez = basicconfig["personal"].get("ez", false).asBool();
 	history = basicconfig["personal"].get("history", false).asBool();
 	autosync = basicconfig["personal"].get("autosync", false).asBool();
+	U_default = basicconfig["personal"]["u"].get("default", "local").asString();
 	showBanner(workname, working);
 	Json::Value config;
 #ifdef APISENDER_REMOTE_CLOUD
@@ -878,6 +880,9 @@ int main(int argc, char* argv[])
 			std::cout << jsonfile::jsontoString(config[working], "  ") << std::endl;
 		}
 		else if (command_1 == "u") {
+#ifdef APISENDER_REMOTE_CLOUD
+			if (U_default == "remote")cloud.pull(basicconfig);
+#endif
 			working = basicconfig["personal"]["u"]["working"].asString();
 			workname = basicconfig["personal"]["u"]["workspace"].asString();
 			command_2 = workname;
@@ -912,6 +917,11 @@ int main(int argc, char* argv[])
 					autosync = false;
 				}
 				basicconfig["personal"]["autosync"] = autosync;
+			}
+			else if (command_2 == "udefault") {
+				if (command_2 == "remote")basicconfig["personal"]["u"]["U_default"] = command_4;
+				else basicconfig["personal"]["u"]["U_default"] = "local";
+				U_default = basicconfig["personal"]["u"]["U_default"].asString();
 			}
 			jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 		}
