@@ -198,7 +198,6 @@ static std::string outputbool(bool A_) {
 	else return std::string("False");
 }
 namespace apisender {
-#ifdef APISENDER_STRESS_TESTING
 	enum LogType {
 		NONE,
 		TRACE,
@@ -240,6 +239,7 @@ namespace apisender {
 			}
 		}
 	};
+#ifdef APISENDER_STRESS_TESTING
 	class stress_testing {
 	public:
 		bool status = true;
