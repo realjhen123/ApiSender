@@ -661,7 +661,8 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
 		jsonfile::sep = "\t";
 	}
-	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui) << " AutoSync:" << outputbool(autosync);
+	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui) << std::endl;
+	std::cout << "AutoSync:" << outputbool(autosync) << " udefault:" << U_default;
 	std::cout << "\n=====Apisender=====" << std::endl;
 }
 static void clearMonitor() {
