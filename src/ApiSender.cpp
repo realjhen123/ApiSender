@@ -678,12 +678,11 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
-	std::string command_1 = "", command_2, command_3, command_4;
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
-		else if (c == "u")command_1 = "u";
 	}
+	std::string command_1 = "", command_2, command_3, command_4;
 #ifdef _DEBUG
 	std::cout << "Debug";
 #endif
