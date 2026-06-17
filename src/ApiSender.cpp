@@ -911,6 +911,7 @@ int main(int argc, char* argv[])
 			if (command_2 == "autosync") {
 				if (command_3 == "on") {
 					autosync = true;
+					cloud.pull(basicconfig);
 				}
 				else if (command_3 == "off") {
 					autosync = false;
