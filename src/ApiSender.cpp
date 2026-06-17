@@ -1077,6 +1077,13 @@ int main(int argc, char* argv[])
 				jsonfile::writeJsonFile(APISENDER_PATH "/config.json", basicconfig);
 			}
 		}
+		else if (command_1 == "print") {
+			std::cin >> command_2;
+			if (command_2 == "config")std::cout << config.toStyledString();
+			else if (command_2 == "basicconfig")std::cout << basicconfig.toStyledString();
+			else if (command_2 == "cloud")std::cout << cloud.cloud.toStyledString();
+			else if (command_2 == "cloudconfig")std::cout << cloud.cloudconfig.toStyledString();
+		}
 		command_1 = "";
 		command_2 = "";
 		command_3 = "";
