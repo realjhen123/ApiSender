@@ -380,7 +380,7 @@ namespace apisender {
 			cloud["pull"]["url"] = "$base /pull";
 			cloud["pull"]["response"]["stream"] = false;
 			cloud["pull"]["response"]["type"] = "commandline";
-			cloud["pull"]["method"] = "GET";
+			cloud["pull"]["method"] = "POST";
 
 			cloud["login"]["request"]["body"]["username"] = "";
 			cloud["login"]["request"]["body"]["password"] = "";
