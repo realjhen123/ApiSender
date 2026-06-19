@@ -24,8 +24,8 @@
 #endif
 
 #define SUCCEED 1
-#define APISENDER_VERSION "v2026.6.17.4"
-#define APISENDER_VERSION_KIND "release"
+#define APISENDER_VERSION "v2026.6.20.1"
+#define APISENDER_VERSION_KIND "beta"
 
 bool ui = true;
 bool ez = false;
