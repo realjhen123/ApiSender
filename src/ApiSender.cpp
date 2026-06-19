@@ -304,14 +304,18 @@ namespace apisender {
 		return true;
 	}
 	namespace error {
-		enum ErrorCode {
-			ASE0001,
-
-		};
-		std::unordered_map<apisender::error::ErrorCode, std::string> ErrorInfo;
-		void initErrorInfo() {
-			ErrorInfo[ASE0001] = "No Allow Char";
-		}
+        enum ErrorCode {
+            ASE0000,
+            ASE0001,
+        };
+        std::unordered_map<apisender::error::ErrorCode, std::string> ErrorInfo;
+        void initErrorInfo() {
+            ErrorInfo[ASE0000] = "";
+            ErrorInfo[ASE0001] = "No Allow Char";
+        }
+        void setCustomMessage(std::string E_){
+            ErrorInfo[ASE0000] = E_;
+        }
 		void DropError(apisender::error::ErrorCode ecode, std::string rawcontent) {
 			std::cout << "\n\n\n===============\n";
 			std::cout << "We have some problem.\n";
@@ -457,10 +461,17 @@ namespace apisender {
 	}
 	void ASRCloud::pull(Json::Value& bc_) {
 		std::string rawstr = apisender::runawork(cloud, "pull", "cloud", true, *this);
-		Json::Value d = jsonfile::parse(
-			base64_decode(
-				gzip::decompress(rawstr.data(), rawstr.size())
+        Json::Value d;
+        try {
+    		d = jsonfile::parse(
+	    		base64_decode(
+		    		gzip::decompress(rawstr.data(), rawstr.size())
 			));
+        }
+        catch (const std::runtime_error& e){
+            apisender::error::setCustomMessage(e.what());
+            apisender::error::DropError(apisender::error::ASE0000, "ASRCloud.pull");
+        }
 		for (const auto& spacename : d.getMemberNames()) {
 			Json::Value space;
 			if (spacename.find("APISENDER_") == std::string::npos) {
