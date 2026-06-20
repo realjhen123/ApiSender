@@ -781,10 +781,6 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
-	for (int i = 0; i < argc; i++) {
-		std::string c = argv[i];
-		if (c == "--unautosync" || c == "-nsync")autosync = false;
-	}
 	std::string command_1 = "", command_2, command_3, command_4;
 #ifdef _DEBUG
 	std::cout << "Debug";
@@ -806,7 +802,11 @@ int main(int argc, char* argv[])
 	history = basicconfig["personal"].get("history", false).asBool();
 	autosync = basicconfig["personal"].get("autosync", false).asBool();
 	U_default = basicconfig["personal"]["u"].get("U_default", "local").asString();
-	showBanner(workname, working);
+	for (int i = 0; i < argc; i++) {
+		std::string c = argv[i];
+		if (c == "--unautosync" || c == "-nsync")autosync = false;
+	}
+    showBanner(workname, working);
 	Json::Value config;
 #ifdef APISENDER_REMOTE_CLOUD
 	apisender::ASRCloud cloud(
