@@ -663,8 +663,50 @@ namespace apisender {
 			if (!cc.stream)std::cout << res << std::endl;
 		}
 		else if (config_[working]["response"]["type"] == "json") {
-			if (!cc.stream)std::cout << jsonfile::parse(res);
-		}
+            std::string parse = config_[working]["response"]["parse"].asString();
+            if (parse == "null"){    
+                if (!cc.stream)std::cout << jsonfile::parse(res);
+            } else { 
+                std::queue<std::string> plist;    
+                std::stack<char> tmp;
+                int itc = 0;
+                bool ti = false;
+                for (const char p : parse){
+                    tmp.push(p);
+                    if (p == '-' && parse.size() >= (itc+1)){
+                        if (parse[itc+1] == '>'){
+                            while(!tmp.empty()){
+                                char t = tmp.top();
+                                if (t == ' ' || t == '-'){
+                                    tmp.pop();
+                                }else{
+                                    break;
+                                }
+                            }
+                        }
+                        std::string complete_str = "";
+                        while (!tmp.empty()){
+                            std::string c_s = complete_str;
+                            complete_str = tmp.top() + c_s;
+                            tmp.pop();
+                        }
+                        plist.push(complete_str);
+                        ti = true;
+                    } else {
+                        if (ti){
+                            if (p == ' ' || p == '>')tmp.pop();
+                            else ti=false;
+                        }
+                    }
+                    itc++;
+                }
+                while(!plist.empty()){
+                    std::string a = plist.front();
+                    std::cout << a << "\n";
+                    plist.pop();
+                }
+            }
+        }
 		else {
 			std::ofstream out(config_[working]["response"]["type"].asString(), std::ios::app);
 			out << "\n" << getReadableTime() << "\n";
@@ -727,6 +769,54 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
+    //temp code
+    {
+        std::string parse = "123-> 123 ->123  ->123-> 123->";
+        if (parse == "null"){    
+            if (false);
+        } else { 
+            std::queue<std::string> plist;    
+            std::stack<char> tmp;
+            int itc = 0;
+            bool ti = false;
+            for (const char p : parse){
+                tmp.push(p);
+                if (p == '-' && parse.size() >= (itc+1)){
+                    if (parse[itc+1] == '>'){
+                        while(!tmp.empty()){
+                            char t = tmp.top();
+                            if (t == ' ' || t == '-'){
+                                tmp.pop();
+                            }else{
+                                break;
+                            }
+                        }
+                    }
+                    std::string complete_str = "";
+                    while (!tmp.empty()){
+                         std::string c_s = complete_str;
+                         complete_str = tmp.top() + c_s;
+                         tmp.pop();
+                    }
+                    plist.push(complete_str);
+                    ti = true;
+                } else {
+                    if (ti){
+                        if (p == ' ' || p == '>')tmp.pop();
+                        else ti=false;
+                    }
+                }
+                itc++;
+            }
+            while(!plist.empty()){
+                std::string a = plist.front();
+                std::cout << a << "\n";
+                plist.pop();
+            }
+        }
+        return 0;
+    }
+    //temp code end
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
@@ -785,6 +875,7 @@ int main(int argc, char* argv[])
 			config["."]["cookies"] = Json::nullValue;
 			config["."]["response"]["type"] = "commandline";
 			config["."]["response"]["onJson"] = false;
+			config["."]["response"]["parse"] = "null";
 			config["."]["response"]["stream"] = false;
 			config["base_url"] = "";
 			basicconfig["Apis"]["ApiSender"]["introduction"] = "";
@@ -829,7 +920,8 @@ int main(int argc, char* argv[])
 				config[command_2]["method"] = "get";
 				config[command_2]["response"]["type"] = "commandline";
 				config[command_2]["response"]["onJson"] = false;
-				config[command_2]["response"]["stream"] = false;
+				config[command_2]["response"]["parse"] = "null";
+                config[command_2]["response"]["stream"] = false;
 				basicconfig["Apis"][workname][command_2] = "";
 			}
 			jsonfile::writeJsonFile(workfile,config);
