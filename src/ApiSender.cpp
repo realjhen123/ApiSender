@@ -469,8 +469,9 @@ namespace apisender {
 			));
         }
         catch (const std::runtime_error& e){
+            std::string custom_error_str = "ASRCloud.pull rawstr=" + rawstr;
             apisender::error::setCustomMessage(e.what());
-            apisender::error::DropError(apisender::error::ASE0000, "ASRCloud.pull");
+            apisender::error::DropError(apisender::error::ASE0000, custom_error_str);
         }
 		for (const auto& spacename : d.getMemberNames()) {
 			Json::Value space;
