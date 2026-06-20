@@ -656,16 +656,10 @@ namespace apisender {
 				!silence
 			);
 		}
-		if (silence)return res;
-		
-		if (config_[working]["response"]["type"] == "commandline") {
-			if (!cc.stream)std::cout << "Response:" << std::endl;
-			if (!cc.stream)std::cout << res << std::endl;
-		}
-		else if (config_[working]["response"]["type"] == "json") {
+        if (config_[working]["response"]["type"].asString() == "json"){
             std::string parse = config_[working]["response"]["parse"].asString();
             if (parse == "null"){    
-                if (!cc.stream)std::cout << jsonfile::parse(res);
+                ;
             } else { 
                 std::queue<std::string> plist;    
                 std::stack<char> tmp;
@@ -706,7 +700,22 @@ namespace apisender {
                     r_json = r_json[pname];
                     plist.pop();
                 }
-                return r_json.asString();
+                res = r_json.asString();
+            }
+        }
+		if (silence)return res;
+		
+		if (config_[working]["response"]["type"].asString() == "commandline") {
+			if (!cc.stream)std::cout << "Response:" << std::endl;
+			if (!cc.stream)std::cout << res << std::endl;
+		}
+		else if (config_[working]["response"]["type"].asString() == "json") {
+            std::string parse = config_[working]["response"]["parse"].asString();
+            if (parse == "null"){    
+                if (!cc.stream)std::cout << jsonfile::parse(res);
+            } else {
+			    if (!cc.stream)std::cout << "Response:" << std::endl;
+                if (!cc.stream)std::cout << res << std::endl;
             }
         }
 		else {
