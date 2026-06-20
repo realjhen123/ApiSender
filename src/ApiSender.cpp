@@ -761,6 +761,7 @@ static void showBanner(std::string workspace_,std::string working_ , Json::Value
 			<< "body:" << jsonfile::parse(c_[working_]["request"]["body"]) << std::endl
 			<< "---response---" << std::endl
 			<< "type:" << jsonfile::parse(c_[working_]["response"]["type"]);
+        if (c_[working_]["response"]["type"].asString() == "json")std::cout << "\n" << c_[working_]["response"]["parse"].asString();
 		jsonfile::sep = "\t";
 	}
 	std::cout << "\n---PERSONAL---\nez:" << outputbool(ez) << " history:" << outputbool(history) << " ui:" << outputbool(ui) << std::endl;
