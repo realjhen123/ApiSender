@@ -769,54 +769,6 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
-    //temp code
-    {
-        std::string parse = "123-> 123 ->123  ->123-> 123->";
-        if (parse == "null"){    
-            if (false);
-        } else { 
-            std::queue<std::string> plist;    
-            std::stack<char> tmp;
-            int itc = 0;
-            bool ti = false;
-            for (const char p : parse){
-                tmp.push(p);
-                if (p == '-' && parse.size() >= (itc+1)){
-                    if (parse[itc+1] == '>'){
-                        while(!tmp.empty()){
-                            char t = tmp.top();
-                            if (t == ' ' || t == '-'){
-                                tmp.pop();
-                            }else{
-                                break;
-                            }
-                        }
-                    }
-                    std::string complete_str = "";
-                    while (!tmp.empty()){
-                         std::string c_s = complete_str;
-                         complete_str = tmp.top() + c_s;
-                         tmp.pop();
-                    }
-                    plist.push(complete_str);
-                    ti = true;
-                } else {
-                    if (ti){
-                        if (p == ' ' || p == '>')tmp.pop();
-                        else ti=false;
-                    }
-                }
-                itc++;
-            }
-            while(!plist.empty()){
-                std::string a = plist.front();
-                std::cout << a << "\n";
-                plist.pop();
-            }
-        }
-        return 0;
-    }
-    //temp code end
 	for (int i = 0; i < argc; i++) {
 		std::string c = argv[i];
 		if (c == "--unautosync" || c == "-nsync")autosync = false;
