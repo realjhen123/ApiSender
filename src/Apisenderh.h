@@ -15,3 +15,4 @@
 #include "gzip/compress.hpp"
 #include "gzip/decompress.hpp"
 #include "gzip/utils.hpp"
+#include "SHA256.h"
