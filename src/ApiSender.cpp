@@ -24,7 +24,7 @@
 #endif
 
 #define SUCCEED 1
-#define APISENDER_VERSION "v2026.6.20.1"
+#define APISENDER_VERSION "v2026.6.20.2"
 #define APISENDER_VERSION_KIND "beta"
 
 bool ui = true;
@@ -495,11 +495,9 @@ namespace apisender {
         std::string tc = d["APISENDER_TIME_COUNT"].asString();
         if (localconfig_sha256 != ""){
             d.removeMember("APISENDER_TIME_COUNT");
-            std::cout << "\n" << localconfig_sha256 << "\n";
             std::string remote_s = apisender::sha256(
                 jsonfile::parse(
                     d,""));
-            std::cout << remote_s;
             if (remote_s != localconfig_sha256){
                 std::cout << "Pull Error\nSave config on remote or local?(r or l)";
                 std::string c;
