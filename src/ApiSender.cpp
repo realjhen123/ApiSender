@@ -199,7 +199,7 @@ static std::string outputbool(bool A_) {
 	else return std::string("False");
 }
 namespace apisender {
-	enum LogType {
+    enum LogType {
 		NONE,
 		TRACE,
 		DEBUG,
@@ -240,6 +240,11 @@ namespace apisender {
 			}
 		}
 	};
+    std::string sha256(std::string str_){
+        SHA256 sha;
+        sha.update(str_.c_str());
+        return SHA256::toString(sha.digest());
+    }
 #ifdef APISENDER_STRESS_TESTING
 	class stress_testing {
 	public:
@@ -342,7 +347,7 @@ namespace apisender {
 		void first_init();
 		void assistant();
 		void push(Json::Value bc_);
-		void pull(Json::Value& bc_);
+		void pull(Json::Value& bc_, std::string localconfig_sha256);
 		long long get_cloud_msc();
 	};
 	std::string runawork(Json::Value config_, std::string working, std::string workspace, bool silence, apisender::ASRCloud cloud_);
@@ -459,7 +464,7 @@ namespace apisender {
 		this->cloudconfig["raw"] = gzip::compress(rawstr.data(), rawstr.size(),7);
 		apisender::runawork(this->cloud, "push", "cloud", true, *this);
 	}
-	void ASRCloud::pull(Json::Value& bc_) {
+	void ASRCloud::pull(Json::Value& bc_,std::string localconfig_sha256 = "") {
 		std::string rawstr = apisender::runawork(cloud, "pull", "cloud", true, *this);
         Json::Value d;
         try {
@@ -472,6 +477,21 @@ namespace apisender {
             std::string custom_error_str = "ASRCloud.pull rawstr=" + rawstr;
             apisender::error::setCustomMessage(e.what());
             apisender::error::DropError(apisender::error::ASE0000, custom_error_str);
+        }
+        if (localconfig_sha256 != ""){
+            std::string remote_s = apisender::sha256(
+                jsonfile::parse(
+                    d,""));
+            if (remote_s != localconfig_sha256){
+                std::cout << "Pull Error\nSave config on remote or local?(r or l)";
+                std::string c;
+                std::cin >> c;
+                if (c == "r" || c == "remote" || c == "cloud"){
+                   ; 
+                }else {
+                    return;
+                }
+            }
         }
 		for (const auto& spacename : d.getMemberNames()) {
 			Json::Value space;
@@ -721,7 +741,8 @@ int main(int argc, char* argv[])
 	apisender::ASRCloud cloud(
 		basicconfig["personal"].get("cloudname", "cloud.json").asString()
 	);
-	if (autosync)cloud.pull(basicconfig);
+	if (autosync)cloud.pull(basicconfig
+            , jsonfile::parse(config,""));
 #endif
 	std::cout << ">";
 	std::cin >> command_1;
