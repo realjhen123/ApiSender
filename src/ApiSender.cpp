@@ -492,6 +492,7 @@ namespace apisender {
             apisender::error::setCustomMessage(e.what());
             apisender::error::DropError(apisender::error::ASE0000, custom_error_str);
         }
+        std::string tc = d["APISENDER_TIME_COUNT"].asString();
         if (localconfig_sha256 != ""){
             d.removeMember("APISENDER_TIME_COUNT");
             std::cout << "\n" << localconfig_sha256 << "\n";
@@ -510,6 +511,7 @@ namespace apisender {
                 }
             }
         }
+        d["APISENDER_TIME_COUNT"] = tc;
 		for (const auto& spacename : d.getMemberNames()) {
 			Json::Value space;
 			if (spacename.find("APISENDER_") == std::string::npos) {
