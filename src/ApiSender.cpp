@@ -684,13 +684,13 @@ namespace apisender {
                                 }
                             }
                         }
-                        std::string complete_str = "";
+                        std::string cs = "";
                         while (!tmp.empty()){
-                            std::string c_s = complete_str;
-                            complete_str = tmp.top() + c_s;
+                            std::string c_s = cs;
+                            cs = tmp.top() + c_s;
                             tmp.pop();
                         }
-                        plist.push(complete_str);
+                        plist.push(cs);
                         ti = true;
                     } else {
                         if (ti){
@@ -700,11 +700,13 @@ namespace apisender {
                     }
                     itc++;
                 }
+                Json::Value r_json = jsonfile::parse(res);
                 while(!plist.empty()){
-                    std::string a = plist.front();
-                    std::cout << a << "\n";
+                    std::string pname = plist.front();
+                    r_json = r_json[pname];
                     plist.pop();
                 }
+                return r_json.asString();
             }
         }
 		else {
