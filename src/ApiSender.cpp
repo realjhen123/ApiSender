@@ -614,17 +614,32 @@ namespace apisender {
         }
         return P;
     }
-    std::string sub_runawork(std::string str){
+    struct sub_run_re{
+        std::string str;
+        bool isCmd = false;
+    };
+    sub_run_re sub_runawork(std::string str){
+        sub_run_re R;
         auto P = paraparse(str);
         if (!P.havepare){
-            return str;
+            R.str = str;
+            R.isCmd = false;
+            return R;
         }
         if (P.t_ == _str){
             if (P.str_ == "INPUT"){
-                std::
+                R.str = "NeedInput";
+                R.isCmd = true;
+                return R;
+            }else if(P.str_.find("`") != std::string::npos){
+                R.str = "NeedWeb";
+                R.isCmd = true;
+                return R;
             }
         }
-        return "A";
+        R.str = "";
+        R.isCmd = false;
+        return R;
     }
 	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence 
 #ifdef APISENDER_REMOTE_CLOUD
