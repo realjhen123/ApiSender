@@ -306,7 +306,7 @@ namespace apisender {
 			if ((compare_with[i] == c + 32) || (compare_with[i] == c - 32) || (compare_with[i] == c))i++;
 			else return false;
 		}
-        if (target_str != compare_with)return false;
+        if (target_str != compare_with && i == 0)return false;
         else return true;
 	}
 	namespace error {
@@ -544,109 +544,120 @@ namespace apisender {
         std::string raw;
         par_tp t_ = _str;
     };
-    par_re paraparse(std::string pa_){
-        par_re P;
-        if (pa_.find("$(") == std::string::npos){
-            P.haveparse = false;
-            P.raw = pa_;
-            return P;
-        }
-        P.haveparse = true;
-        std::queue<char> c;
-        std::queue<char> d;
-        int a = 0 ,b = 0;
-        for (const char p : pa_){
-            switch (p){
-                case '<':
-                    if (a != 1)a = 1;
-                    break;
-                case '>':
-                    if (a == 1)a = 2;
-                case '$':
-                    b = 1;
-                    break;
-                case '(':
-                    if (b == 1)b = 2;
-                    break;
-                case ')':
-                    if (b == 2)b = 3;
-                default:
-                    if (a == 1)c.push(p);
-                    else if (b == 2)d.push(p);
-                    if (a == 2){
-                        std::string p_ = "";
-                        while (!c.empty()){
-                            p_ += c.front();
-                            c.pop();
-                        }
-                        if (apisender::stringcompare(p_ , "string") || apisender::stringcompare(p_ , "str")){
-                            P.t_ = _str;
-                        }else if (p_ == "int"){
-                            P.t_ = _int;
-                        }else if (p_ == "bool"){
-                            P.t_ = _bool;
-                        }
-                        a = 0;
-                    }else if (b == 3){
-                        std::string p_ = "";
-                        while (!d.empty()){
-                            p_ += d.front();
-                            d.pop();
-                        }
-                        switch (P.t_){
-                            case _str:
-                                P.str_ = p_;
-                                break;
-                            case _bool:
-                                if (apisender::stringcompare(p_ , "true"))P.bool_ = true;
-                                else if (apisender::stringcompare(p_ , "false"))P.bool_ = false;
-                                break;
-                            case _int:
-                                P.int_ = std::atoi(p_.c_str());
-                                break;
-                            default:
-                                break;
-                        }
-                        b = 0;
-                    }
-                    break;
-            }
-        }
-        return P;
-    }
+	par_re paraparse(std::string pa_) {
+		par_re P;
+		if (pa_.find("$(") == std::string::npos) {
+			P.haveparse = false;
+			P.raw = pa_;
+			return P;
+		}
+		P.haveparse = true;
+		std::queue<char> c;
+		std::queue<char> d;
+		int a = 0, b = 0;
+		for (const char p : pa_) {
+			switch (p) {
+			case '<':
+				if (a != 1)a = 1;
+				break;
+			case '>':
+				if (a == 1)a = 2;
+			case '$':
+				b = 1;
+				break;
+			case '(':
+				if (b == 1)b = 2;
+				break;
+			case ')':
+				if (b == 2)b = 3;
+			default:
+				if (a == 1)c.push(p);
+				else if (b == 2)d.push(p);
+				if (a == 2) {
+					std::string p_ = "";
+					while (!c.empty()) {
+						p_ += c.front();
+						c.pop();
+					}
+					if (apisender::stringcompare(p_, "string") || apisender::stringcompare(p_, "str")) {
+						P.t_ = _str;
+					}
+					else if (p_ == "int") {
+						P.t_ = _int;
+					}
+					else if (p_ == "bool") {
+						P.t_ = _bool;
+					}
+					a = 0;
+				}
+				else if (b == 3) {
+					std::string p_ = "";
+					while (!d.empty()) {
+						p_ += d.front();
+						d.pop();
+					}
+					P.raw = p_;
+					switch (P.t_) {
+					case _str:
+						P.str_ = p_;
+						break;
+					case _bool:
+						if (apisender::stringcompare(p_, "true"))P.bool_ = true;
+						else if (apisender::stringcompare(p_, "false"))P.bool_ = false;
+						break;
+					case _int:
+						P.int_ = std::atoi(p_.c_str());
+						break;
+					default:
+						break;
+					}
+					b = 0;
+				}
+				break;
+			}
+		}
+		return P;
+	}
     struct sub_run_re{
         std::string str;
         bool isCmd = false;
         par_re R;
     };
-    sub_run_re sub_runawork(std::string str){
-        sub_run_re R;
-        R.R = paraparse(str);
-        if (!R.R.havepare){
-            R.str = str;
-            R.isCmd = false;
-            return R;
-        }
-        if (R.R.t_ == _str){
-            if (P.str_ == "INPUT"){
-                R.str = "NeedInput";
-                R.isCmd = true;
-                return R;
-            }else if(P.str_.find("`") != std::string::npos){
-                R.str = "NeedWeb";
-                R.isCmd = true;
-                return R;
-            }
-            else {
-                R.str = R.R.str_;
-                R.isCmd = false;
-                return R;
-            }
-        }
-        R.str = "";
-        R.isCmd = false;
-        return R;
-    }
+	sub_run_re sub_runawork(std::string str) {
+		sub_run_re R;
+		R.R = paraparse(str);
+		if (!R.R.haveparse) {
+			R.R.str_ = str;
+			R.str = str;
+			R.isCmd = false;
+			return R;
+		}
+		if (R.R.t_ == _str) {
+			if (R.R.str_ == "INPUT") {
+				R.str = "NeedInput";
+				R.isCmd = true;
+				return R;
+			}
+			else if (R.R.str_.find("`") != std::string::npos) {
+				R.str = "NeedWeb";
+				R.isCmd = true;
+				return R;
+			}
+			else {
+				R.str = R.R.str_;
+				R.isCmd = false;
+				return R;
+			}
+		}
+		if (str.find('`') != std::string::npos) {
+			R.str = "NeedWeb";
+			R.isCmd = true;
+			return R;
+		}
+		R.str = "";
+		R.isCmd = false;
+		return R;
+	}
 	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence 
 #ifdef APISENDER_REMOTE_CLOUD
 		, apisender::ASRCloud cloud_ = apisender::ASRCloud() 
@@ -709,7 +720,7 @@ namespace apisender {
 							std::getline(std::cin >> std::ws, in);
                             switch (R.R.t_){
                                 case apisender::_int:
-                                    req_json[h_] = std::atoi(in);
+                                    req_json[h_] = std::atoi(in.c_str());
                                     break;
                                 case apisender::_str:
                                     req_json[h_] = in;
@@ -728,7 +739,7 @@ namespace apisender {
 						// $(apisender`/login)
 						//else if (h_s.find('`') != std::string::npos) {
                         else if (R.str == "NeedWeb"){
-                            h_s = "$(" + R.R.str_ + ")";
+                            h_s = "$(" + R.R.raw + ")";
 							std::string target_working, target_space , target_spacename;
 							target_spacename = h_s.substr(2, h_s.find('`') - 2);
 							if (target_spacename == "~" || target_spacename == "") {
@@ -762,13 +773,18 @@ namespace apisender {
                             std::string re_ = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
                             switch (R.R.t_){
                                 case apisender::_str:
-                                    req_json[h_] = "<string>" + re_;
+                                    req_json[h_] = re_;
                                     break;
                                 case apisender::_int:
-                                    req_json[h_] = "<int>" + re_;
+                                    req_json[h_] = std::atoi(re_.c_str());
                                     break;
                                 case apisender::_bool:
-                                    req_json[h_] = "<bool>" + re_;
+									if (apisender::stringcompare(re_, "true")) {
+										req_json[h_] = true;
+									}
+									else {
+										req_json[h_] = false;
+									}
                             }
 							if (!ez && !silence)std::cout << req_json[h_] << std::endl;
 						}
@@ -780,6 +796,19 @@ namespace apisender {
 							
 						}
 #endif 
+					}
+					else {
+						switch (R.R.t_) {
+						case apisender::_int:
+							req_json[h_] = R.R.int_;
+							break;
+						case apisender::_bool:
+							req_json[h_] = R.R.bool_;
+							break;
+						case apisender::_str:
+							req_json[h_] = R.R.str_;
+							break;
+						}
 					}
 				}
 
@@ -927,10 +956,6 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
-    {
-        std::string a = apisender::sub_runawork("aaaINPUT)");
-        return 0;
-    }
 	std::string command_1 = "", command_2, command_3, command_4;
 #ifdef _DEBUG
 	std::cout << "Debug";
