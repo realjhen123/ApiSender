@@ -306,7 +306,8 @@ namespace apisender {
 			if ((compare_with[i] == c + 32) || (compare_with[i] == c - 32) || (compare_with[i] == c))i++;
 			else return false;
 		}
-		return true;
+        if (target_str != compare_with)return false;
+        else return true;
 	}
 	namespace error {
         enum ErrorCode {
@@ -530,6 +531,101 @@ namespace apisender {
 		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
 	}
 #endif
+    enum par_tp{
+      _int,
+      _str,
+      _bool
+    };
+    struct par_re{
+        int int_;
+        std::string str_;
+        bool bool_;
+        bool haveparse;
+        std::string raw;
+        par_tp t_ = _str;
+    };
+    par_re paraparse(std::string pa_){
+        par_re P;
+        if (pa_.find("$(") == std::string::npos){
+            P.haveparse = false;
+            P.raw = pa_;
+            return P;
+        }
+        P.haveparse = true;
+        std::queue<char> c;
+        std::queue<char> d;
+        int a = 0 ,b = 0;
+        for (const char p : pa_){
+            switch (p){
+                case '<':
+                    if (a != 1)a = 1;
+                    break;
+                case '>':
+                    if (a == 1)a = 2;
+                case '$':
+                    b = 1;
+                    break;
+                case '(':
+                    if (b == 1)b = 2;
+                    break;
+                case ')':
+                    if (b == 2)b = 3;
+                default:
+                    if (a == 1)c.push(p);
+                    else if (b == 2)d.push(p);
+                    if (a == 2){
+                        std::string p_ = "";
+                        while (!c.empty()){
+                            p_ += c.front();
+                            c.pop();
+                        }
+                        if (apisender::stringcompare(p_ , "string") || apisender::stringcompare(p_ , "str")){
+                            P.t_ = _str;
+                        }else if (p_ == "int"){
+                            P.t_ = _int;
+                        }else if (p_ == "bool"){
+                            P.t_ = _bool;
+                        }
+                        a = 0;
+                    }else if (b == 3){
+                        std::string p_ = "";
+                        while (!d.empty()){
+                            p_ += d.front();
+                            d.pop();
+                        }
+                        switch (P.t_){
+                            case _str:
+                                P.str_ = p_;
+                                break;
+                            case _bool:
+                                if (apisender::stringcompare(p_ , "true"))P.bool_ = true;
+                                else if (apisender::stringcompare(p_ , "false"))P.bool_ = false;
+                                break;
+                            case _int:
+                                P.int_ = std::atoi(p_.c_str());
+                                break;
+                            default:
+                                break;
+                        }
+                        b = 0;
+                    }
+                    break;
+            }
+        }
+        return P;
+    }
+    std::string sub_runawork(std::string str){
+        auto P = paraparse(str);
+        if (!P.havepare){
+            return str;
+        }
+        if (P.t_ == _str){
+            if (P.str_ == "INPUT"){
+                std::
+            }
+        }
+        return "A";
+    }
 	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence 
 #ifdef APISENDER_REMOTE_CLOUD
 		, apisender::ASRCloud cloud_ = apisender::ASRCloud() 
@@ -781,6 +877,10 @@ static void clearMonitor() {
 
 int main(int argc, char* argv[])
 {
+    {
+        std::string a = apisender::sub_runawork("aaaINPUT)");
+        return 0;
+    }
 	std::string command_1 = "", command_2, command_3, command_4;
 #ifdef _DEBUG
 	std::cout << "Debug";
