@@ -617,16 +617,17 @@ namespace apisender {
     struct sub_run_re{
         std::string str;
         bool isCmd = false;
+        par_re R;
     };
     sub_run_re sub_runawork(std::string str){
         sub_run_re R;
-        auto P = paraparse(str);
-        if (!P.havepare){
+        R.R = paraparse(str);
+        if (!R.R.havepare){
             R.str = str;
             R.isCmd = false;
             return R;
         }
-        if (P.t_ == _str){
+        if (R.R.t_ == _str){
             if (P.str_ == "INPUT"){
                 R.str = "NeedInput";
                 R.isCmd = true;
@@ -634,6 +635,11 @@ namespace apisender {
             }else if(P.str_.find("`") != std::string::npos){
                 R.str = "NeedWeb";
                 R.isCmd = true;
+                return R;
+            }
+            else {
+                R.str = R.R.str_;
+                R.isCmd = false;
                 return R;
             }
         }
@@ -693,18 +699,36 @@ namespace apisender {
 			if (config_[working]["request"]["body"].isObject()) {
 				Json::Value req_json = config_[working]["request"]["body"];
 				std::vector<std::string> h = req_json.getMemberNames();
-				
 				for (const auto& h_ : h) {
 					std::string h_s = req_json[h_].asString();
-					if (h_s.find('$') != std::string::npos) {
-						if (h_s == "$(INPUT)") {
+                    auto R = apisender::sub_runawork(h_s);
+                    if (R.isCmd){
+						if (R.str == "NeedInput") {
 							std::cout << "Input \"" << h_ << "\" >";
 							std::string in;
 							std::getline(std::cin >> std::ws, in);
-							req_json[h_] = in;
-						}
+                            switch (R.R.t_){
+                                case apisender::_int:
+                                    req_json[h_] = std::atoi(in);
+                                    break;
+                                case apisender::_str:
+                                    req_json[h_] = in;
+                                    break;
+                                case apisender::_bool:
+                                    if (apisender::stringcompare(in,"true")){
+                                        req_json[h_] = true;
+                                    }else{
+                                        req_json[h_] = false;
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
 						// $(apisender`/login)
-						else if (h_s.find('`') != std::string::npos) {
+						//else if (h_s.find('`') != std::string::npos) {
+                        else if (R.str == "NeedWeb"){
+                            h_s = "$(" + R.R.str_ + ")";
 							std::string target_working, target_space , target_spacename;
 							target_spacename = h_s.substr(2, h_s.find('`') - 2);
 							if (target_spacename == "~" || target_spacename == "") {
@@ -735,7 +759,17 @@ namespace apisender {
 							target_working = h_s.substr(h_s.find('`') +1 , h_s.size() - h_s.find('`'));
 							target_working = target_working.substr(0, target_working.size() - 1);
 							if (!ez && !silence)std::cout << target_spacename << " " << target_working << "\n";
-							req_json[h_] = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
+                            std::string re_ = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
+                            switch (R.R.t_){
+                                case apisender::_str:
+                                    req_json[h_] = "<string>" + re_;
+                                    break;
+                                case apisender::_int:
+                                    req_json[h_] = "<int>" + re_;
+                                    break;
+                                case apisender::_bool:
+                                    req_json[h_] = "<bool>" + re_;
+                            }
 							if (!ez && !silence)std::cout << req_json[h_] << std::endl;
 						}
 #ifdef APISENDER_REMOTE_CLOUD
@@ -748,6 +782,7 @@ namespace apisender {
 #endif 
 					}
 				}
+
 				req = jsonfile::parse(req_json);
 			}
 			else {
