@@ -33,6 +33,7 @@ bool history = false;
 bool nevertimeout = true;
 bool showheader = true;
 bool autosync = false;
+bool raw_sender = false;
 std::string U_default;
 namespace jsonfile {
 	std::string sep = "\t";
@@ -996,7 +997,6 @@ int main(int argc, char* argv[])
 	apisender::ASRCloud cloud(
 		basicconfig["personal"].get("cloudname", "cloud.json").asString()
 	);
-	std::cout << apisender::runawork(cloud.cloud, "pull", "cloud", true, cloud);
 	if (autosync){
 		std::cout <<cloud.calcpushstr(basicconfig).toStyledString();
         cloud.pull(basicconfig, apisender::sha256(
@@ -1113,9 +1113,31 @@ int main(int argc, char* argv[])
 			clearMonitor();
 			showBanner(workname, working, config);
 		}
-		else if (command_1 == "run") {
+		else if (command_1 == "run" || command_1 == "r") {
 			std::cin.ignore();
 			apisender::runawork(config, working, workname, false);
+		}
+		else if (command_1 == "runraw" || command_1 == "runsimple" || command_1 == "rs") {
+			CurlClient c_;
+			std::string url, req, res;
+			url = config[working]["url"].asString();
+			for (const auto& head : config[working]["request"]["header"].getMemberNames()) {
+				c_.addHeader(head + ": " + config[working]["request"]["header"][head].asString());
+			}
+			if (config[working]["request"]["body"].isString()) {
+				req = config[working]["request"]["body"].asString();
+			}
+			else {
+				req = jsonfile::parse(config[working]["request"]["body"]); 
+			}
+			if (apisender::stringcompare(config[working]["method"].asString(), "get")) {
+				c_.Get(url + req, res);
+			}
+			else {
+				c_.Post(url, req, res, true);
+			}
+			std::cout << res;
+			std::cout << "======";
 		}
 		else if (command_1 == "debug") {
 			basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
