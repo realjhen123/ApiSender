@@ -713,6 +713,14 @@ namespace apisender {
 				for (const auto& h_ : h) {
 					std::string h_s = req_json[h_].asString();
                     auto R = apisender::sub_runawork(h_s);
+					//Every R
+					//R
+					//- R
+					//- - t_
+					//- - raw
+					//- - T_
+					//- isCmd
+					//- str
                     if (R.isCmd){
 						if (R.str == "NeedInput") {
 							std::cout << "Input \"" << h_ << "\" >";
@@ -771,6 +779,7 @@ namespace apisender {
 							target_working = target_working.substr(0, target_working.size() - 1);
 							if (!ez && !silence)std::cout << target_spacename << " " << target_working << "\n";
                             std::string re_ = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
+							//R.R.t_ => real T
                             switch (R.R.t_){
                                 case apisender::_str:
                                     req_json[h_] = re_;
