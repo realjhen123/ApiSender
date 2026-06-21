@@ -797,15 +797,15 @@ namespace apisender {
                             }
 							if (!ez && !silence)std::cout << req_json[h_] << std::endl;
 						}
-#ifdef APISENDER_REMOTE_CLOUD
-						else if (h_s == "$(D)") {
-							if (cloud_.get_status()) {
-								req_json[h_] = cloud_.cloudconfig["raw"];
-							}
-							
-						}
-#endif 
+
 					}
+#ifdef APISENDER_REMOTE_CLOUD
+					else if (h_s == "$(D)") {
+						if (cloud_.get_status()) {
+							req_json[h_] = cloud_.cloudconfig["raw"];
+						}					
+					}
+#endif 
 					else {
 						switch (R.R.t_) {
 						case apisender::_int:
@@ -996,7 +996,9 @@ int main(int argc, char* argv[])
 	apisender::ASRCloud cloud(
 		basicconfig["personal"].get("cloudname", "cloud.json").asString()
 	);
+	std::cout << apisender::runawork(cloud.cloud, "pull", "cloud", true, cloud);
 	if (autosync){
+		std::cout <<cloud.calcpushstr(basicconfig).toStyledString();
         cloud.pull(basicconfig, apisender::sha256(
             jsonfile::parse(
                 cloud.calcpushstr(
