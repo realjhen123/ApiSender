@@ -200,6 +200,85 @@ static std::string outputbool(bool A_) {
 	else return std::string("False");
 }
 namespace apisender {
+	std::string unicodeparse(const std::string& b) {
+		std::string c;
+		size_t d = 0;
+		while (d < b.length()) {
+			if (b[d] == '\\' && d + 5 < b.length() && b[d + 1] == 'u') {
+				std::string e = b.substr(d + 2, 4);
+				bool f = true;
+				for (char g : e) {
+					if (!((g >= '0' && g <= '9') || (g >= 'a' && g <= 'f') || (g >= 'A' && g <= 'F'))) {
+						f = false;
+						break;
+					}
+				}
+				if (f) {
+					uint32_t h = 0;
+					for (char g : e) {
+						h *= 16;
+						if (g >= '0' && g <= '9') h += g - '0';
+						else if (g >= 'a' && g <= 'f') h += g - 'a' + 10;
+						else if (g >= 'A' && g <= 'F') h += g - 'A' + 10;
+					}
+					if (h >= 0xD800 && h <= 0xDBFF) {
+						if (d + 11 < b.length() &&
+							b[d + 6] == '\\' && b[d + 7] == 'u') {
+							std::string i = b.substr(d + 8, 4);
+							bool j = true;
+							for (char g : i) {
+								if (!((g >= '0' && g <= '9') || (g >= 'a' && g <= 'f') || (g >= 'A' && g <= 'F'))) {
+									j = false;
+									break;
+								}
+							}
+							if (j) {
+								uint32_t k = 0;
+								for (char g : i) {
+									k *= 16;
+									if (g >= '0' && g <= '9') k += g - '0';
+									else if (g >= 'a' && g <= 'f') k += g - 'a' + 10;
+									else if (g >= 'A' && g <= 'F') k += g - 'A' + 10;
+								}
+								if (k >= 0xDC00 && k <= 0xDFFF) {
+									h = 0x10000 + ((h - 0xD800) << 10) + (k - 0xDC00);
+									c += static_cast<char>(0xF0 | (h >> 18));
+									c += static_cast<char>(0x80 | ((h >> 12) & 0x3F));
+									c += static_cast<char>(0x80 | ((h >> 6) & 0x3F));
+									c += static_cast<char>(0x80 | (h & 0x3F));
+									d += 12;
+									continue;
+								}
+							}
+						}
+					}
+					if (h <= 0x7F) {
+						c += static_cast<char>(h);
+					}
+					else if (h <= 0x7FF) {
+						c += static_cast<char>(0xC0 | (h >> 6));
+						c += static_cast<char>(0x80 | (h & 0x3F));
+					}
+					else if (h <= 0xFFFF) {
+						c += static_cast<char>(0xE0 | (h >> 12));
+						c += static_cast<char>(0x80 | ((h >> 6) & 0x3F));
+						c += static_cast<char>(0x80 | (h & 0x3F));
+					}
+					else if (h <= 0x10FFFF) {
+						c += static_cast<char>(0xF0 | (h >> 18));
+						c += static_cast<char>(0x80 | ((h >> 12) & 0x3F));
+						c += static_cast<char>(0x80 | ((h >> 6) & 0x3F));
+						c += static_cast<char>(0x80 | (h & 0x3F));
+					}
+					d += 6;
+					continue;
+				}
+			}
+			c += b[d];
+			++d;
+		}
+		return c;
+	}
     enum LogType {
 		NONE,
 		TRACE,
@@ -998,7 +1077,7 @@ int main(int argc, char* argv[])
 		basicconfig["personal"].get("cloudname", "cloud.json").asString()
 	);
 	if (autosync){
-		std::cout <<cloud.calcpushstr(basicconfig).toStyledString();
+		//std::cout <<cloud.calcpushstr(basicconfig).toStyledString();
         cloud.pull(basicconfig, apisender::sha256(
             jsonfile::parse(
                 cloud.calcpushstr(
