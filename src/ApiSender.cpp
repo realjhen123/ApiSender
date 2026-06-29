@@ -200,7 +200,7 @@ static std::string outputbool(bool A_) {
 	else return std::string("False");
 }
 namespace apisender {
-	std::string unicodeparse(const std::string& b) {
+	std::string unicodeparse(std::string b) {
 		std::string c;
 		size_t d = 0;
 		while (d < b.length()) {
@@ -278,6 +278,17 @@ namespace apisender {
 			++d;
 		}
 		return c;
+	}
+	bool isInt(std::string str) {
+		if (str.empty()) return false;
+		const char* p = str.c_str();
+		if (*p == '-' || *p == '+') ++p;
+		if (!*p) return false;
+		while (*p) {
+			if (*p < '0' || *p > '9') return false;
+			++p;
+		}
+		return true;
 	}
     enum LogType {
 		NONE,
@@ -959,9 +970,15 @@ namespace apisender {
                     itc++;
                 }
                 Json::Value r_json = jsonfile::parse(res);
-                while(!plist.empty()){
-                    std::string pname = plist.front();
-                    r_json = r_json[pname];
+				while (!plist.empty()) {
+					std::string pname = plist.front();
+					if (apisender::isInt(pname)) {
+						int t = std::atoi(pname.c_str());
+						r_json = r_json[t];
+					}
+					else {
+						r_json = r_json[pname];
+					}
                     plist.pop();
                 }
                 res = r_json.asString();
@@ -971,15 +988,24 @@ namespace apisender {
 		
 		if (config_[working]["response"]["type"].asString() == "commandline") {
 			if (!cc.stream)std::cout << "Response:" << std::endl;
-			if (!cc.stream)std::cout << res << std::endl;
+			if (!cc.stream) {
+				if (!config_[working]["response"]["unicode"].asBool())std::cout << res << std::endl;
+				else std::cout << apisender::unicodeparse(res);
+			}
 		}
 		else if (config_[working]["response"]["type"].asString() == "json") {
             std::string parse = config_[working]["response"]["parse"].asString();
             if (parse == "null"){    
-                if (!cc.stream)std::cout << jsonfile::parse(res);
+				if (!cc.stream) {
+					if (!config_[working]["response"]["unicode"].asBool())std::cout << res << std::endl;
+					else std::cout << jsonfile::parse(apisender::unicodeparse(res));
+				}
             } else {
 			    if (!cc.stream)std::cout << "Response:" << std::endl;
-                if (!cc.stream)std::cout << res << std::endl;
+				if (!cc.stream) {
+					if (!config_[working]["response"]["unicode"].asBool())std::cout << res << std::endl;
+					else std::cout << apisender::unicodeparse(res);
+				}
             }
         }
 		else {
@@ -1106,6 +1132,7 @@ int main(int argc, char* argv[])
 			config["."]["response"]["onJson"] = false;
 			config["."]["response"]["parse"] = "null";
 			config["."]["response"]["stream"] = false;
+			config["."]["response"]["unicode"] = false;
 			config["base_url"] = "";
 			basicconfig["Apis"]["ApiSender"]["introduction"] = "";
 			working = ".";
