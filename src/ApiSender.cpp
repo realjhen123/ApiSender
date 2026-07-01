@@ -945,8 +945,8 @@ int main(int argc, char* argv[])
 	curl_global_init(CURL_GLOBAL_ALL);
 	apisender::error::initErrorInfo();
 	system("mkdir " APISENDER_PATH);
-	welcome();
 	clearMonitor();
+	welcome();
 	std::string workfile = APISENDER_PATH "/ApiSender.txt" , workname;
 	std::string working;
 	Json::Value basicconfig = jsonfile::readJsonFile(APISENDER_PATH "/config.json");
