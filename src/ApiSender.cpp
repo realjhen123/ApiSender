@@ -879,6 +879,8 @@ namespace apisender {
 }
 static void showBanner(std::string workspace_, std::string working_) {
 	if (!ui)return;
+	std::cout << "Welcome to Apisender\n";
+	std::cout << "VERSION " << APISENDER_VERSION << std::endl;
 	std::cout << "workspace:\t" << workspace_ << std::endl
 		<< "working:\t" << working_ << std::endl
 		<< "=====Apisender=====" << std::endl;
