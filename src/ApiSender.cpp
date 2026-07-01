@@ -668,7 +668,7 @@ namespace apisender {
 #ifdef APISENDER_REMOTE_CLOUD
 			else if (down_h_s == "$(D)") {
 				if (cloud_.get_status()) {
-					req_json[h_] = cloud_.cloudconfig["raw"];
+					down_h_s = cloud_.cloudconfig["raw"].asString();
 				}
 			}
 #endif 
