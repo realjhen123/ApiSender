@@ -622,132 +622,81 @@ namespace apisender {
 		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
 	}
 #endif
-    enum par_tp{
-      _int,
-      _str,
-      _bool
-    };
-    struct par_re{
-        int int_;
-        std::string str_;
-        bool bool_;
-        bool haveparse;
-        std::string raw;
-        par_tp t_ = _str;
-    };
-	par_re paraparse(std::string pa_) {
-		par_re P;
-		if (pa_.find("$(") == std::string::npos) {
-			P.haveparse = false;
-			P.raw = pa_;
-			return P;
-		}
-		P.haveparse = true;
-		std::queue<char> c;
-		std::queue<char> d;
-		int a = 0, b = 0;
-		for (const char p : pa_) {
-			switch (p) {
-			case '<':
-				if (a != 1)a = 1;
-				break;
-			case '>':
-				if (a == 1)a = 2;
-			case '$':
-				b = 1;
-				break;
-			case '(':
-				if (b == 1)b = 2;
-				break;
-			case ')':
-				if (b == 2)b = 3;
-			default:
-				if (a == 1)c.push(p);
-				else if (b == 2)d.push(p);
-				if (a == 2) {
-					std::string p_ = "";
-					while (!c.empty()) {
-						p_ += c.front();
-						c.pop();
-					}
-					if (apisender::stringcompare(p_, "string") || apisender::stringcompare(p_, "str")) {
-						P.t_ = _str;
-					}
-					else if (p_ == "int") {
-						P.t_ = _int;
-					}
-					else if (p_ == "bool") {
-						P.t_ = _bool;
-					}
-					a = 0;
+	std::string subwork_req(Json::Value req,std::string workspace
+#ifdef APISENDER_REMOTE_CLOUD
+		, apisender::ASRCloud cloud_ = apisender::ASRCloud()
+#endif
+	) {
+		Json::Value req_json = req;
+		std::vector<std::string> h = req_json.getMemberNames();
+		for (const auto& h_ : h) {
+			std::string h_s = req_json[h_].asString();
+			std::string down_h_s = h_s;
+			std::string type = "str";
+			//new gen
+			int tag_d = h_s.find("$");
+			if (h_s.find('`') != std::string::npos) {
+				std::string target_working, target_space, target_spacename;
+
+				std::string target = h_s.substr(tag_d);
+				target = target.substr(2, target.size() - 3);
+
+				int tag_runother = target.find('`');
+				target_spacename = target.substr(0, tag_runother);
+				if (target_spacename == "")target_spacename = workspace;
+
+				target_working = target.substr(tag_runother + 1, target.size() - 3);
+				target_space = APISENDER_PATH;
+				target_space += "/";
+				target_space += target_spacename;
+				target_space += ".txt";
+
+				Json::Value subwork = jsonfile::readJsonFile(target_space);
+				down_h_s = apisender::runawork(subwork, target_working, target_space, true, cloud_);
+			}
+			else if (h_s.find("$(INPUT)") != std::string::npos) {
+				std::cout << "Input \"" << h_ << "\" >";
+				std::string in;
+				std::getline(std::cin >> std::ws, in);
+				std::string s = h_s.substr(0, tag_d) + in;
+				down_h_s = s;
+			}
+#ifdef APISENDER_REMOTE_CLOUD
+			else if (down_h_s == "$(D)") {
+				if (cloud_.get_status()) {
+					req_json[h_] = cloud_.cloudconfig["raw"];
 				}
-				else if (b == 3) {
-					std::string p_ = "";
-					while (!d.empty()) {
-						p_ += d.front();
-						d.pop();
-					}
-					P.raw = p_;
-					switch (P.t_) {
-					case _str:
-						P.str_ = p_;
-						break;
-					case _bool:
-						if (apisender::stringcompare(p_, "true"))P.bool_ = true;
-						else if (apisender::stringcompare(p_, "false"))P.bool_ = false;
-						break;
-					case _int:
-						P.int_ = std::atoi(p_.c_str());
-						break;
-					default:
-						break;
-					}
-					b = 0;
+			}
+#endif 
+			if (h_s[0] == '<') {
+				int tag_small = h_s.find('>');
+				std::string type_in = h_s.substr(1, tag_small - 2);
+				if (type_in == "string" || type_in == "str") {
+					type = "str";
 				}
-				break;
+				else if (type_in == "int") {
+					type = "int";
+				}
+				else if (type_in == "bool") {
+					type = "bool";
+				}
+			}
+			if (type == "str") {
+				req_json[h_] = down_h_s;
+			}
+			else if (type == "int") {
+				req_json[h_] = std::atoi(down_h_s.c_str());
+			}
+			else if (type == "bool") {
+				if (apisender::stringcompare(down_h_s, "true")) {
+					req_json[h_] = true;
+				}
+				else if (apisender::stringcompare(down_h_s , "false")) {
+					req_json[h_] = false;
+				}
 			}
 		}
-		return P;
-	}
-    struct sub_run_re{
-        std::string str;
-        bool isCmd = false;
-        par_re R;
-    };
-	sub_run_re sub_runawork(std::string str) {
-		sub_run_re R;
-		R.R = paraparse(str);
-		if (!R.R.haveparse) {
-			R.R.str_ = str;
-			R.str = str;
-			R.isCmd = false;
-			return R;
-		}
-		if (R.R.t_ == _str) {
-			if (R.R.str_ == "INPUT") {
-				R.str = "NeedInput";
-				R.isCmd = true;
-				return R;
-			}
-			else if (R.R.str_.find("`") != std::string::npos) {
-				R.str = "NeedWeb";
-				R.isCmd = true;
-				return R;
-			}
-			else {
-				R.str = R.R.str_;
-				R.isCmd = false;
-				return R;
-			}
-		}
-		if (str.find('`') != std::string::npos) {
-			R.str = "NeedWeb";
-			R.isCmd = true;
-			return R;
-		}
-		R.str = "";
-		R.isCmd = false;
-		return R;
+		return jsonfile::parse(req_json);
 	}
 	std::string runawork(Json::Value config_,std::string working,std::string workspace,bool silence 
 #ifdef APISENDER_REMOTE_CLOUD
@@ -782,8 +731,9 @@ namespace apisender {
 		if (apisender::stringcompare(config_[working]["method"].asString(),"get")) {
 			std::string req = "?";
 			if (config_[working]["request"]["body"].isObject()) {
-				for (const auto& it : config_[working]["request"]["body"].getMemberNames()) {
-					req += it + "=" + config_[working]["request"]["body"][it].asString() + "&";
+				Json::Value rj = jsonfile::parse(apisender::subwork_req(config_[working]["request"]["body"], workspace, cloud_));
+				for (const auto& it : rj.getMemberNames()) {
+					req += it + "=" + rj[it].asString() + "&";
 				}
 				req = req.substr(0, req.size() - 1);
 			}
@@ -799,120 +749,7 @@ namespace apisender {
 		else if (stringcompare(config_[working]["method"].asString(),"post")) {
 			std::string req;
 			if (config_[working]["request"]["body"].isObject()) {
-				Json::Value req_json = config_[working]["request"]["body"];
-				std::vector<std::string> h = req_json.getMemberNames();
-				for (const auto& h_ : h) {
-					std::string h_s = req_json[h_].asString();
-                    auto R = apisender::sub_runawork(h_s);
-					//Every R
-					//R
-					//- R
-					//- - t_
-					//- - raw
-					//- - T_
-					//- isCmd
-					//- str
-                    if (R.isCmd){
-						if (R.str == "NeedInput") {
-							std::cout << "Input \"" << h_ << "\" >";
-							std::string in;
-							std::getline(std::cin >> std::ws, in);
-                            switch (R.R.t_){
-                                case apisender::_int:
-                                    req_json[h_] = std::atoi(in.c_str());
-                                    break;
-                                case apisender::_str:
-                                    req_json[h_] = in;
-                                    break;
-                                case apisender::_bool:
-                                    if (apisender::stringcompare(in,"true")){
-                                        req_json[h_] = true;
-                                    }else{
-                                        req_json[h_] = false;
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-						// $(apisender`/login)
-						//else if (h_s.find('`') != std::string::npos) {
-                        else if (R.str == "NeedWeb"){
-                            h_s = "$(" + R.R.raw + ")";
-							std::string target_working, target_space , target_spacename;
-							target_spacename = h_s.substr(2, h_s.find('`') - 2);
-							if (target_spacename == "~" || target_spacename == "") {
-								target_spacename = workspace;
-							}
-							else if (target_spacename == ".") {
-								target_spacename = "ApiSender";
-							}
-							target_space = APISENDER_PATH;
-
-							//if not define APISENDER_REMOTE_CLOUD
-							//also exist target_sapce += "/" + target_spacename + ".txt";
-#ifdef APISENDER_REMOTE_CLOUD
-							if (cloud_.get_status()) {
-								target_space = cloud_.get_cloudpath();
-							}
-							else {
-#endif
-								target_space += "/" + target_spacename + ".txt";
-#ifdef APISENDER_REMOTE_CLOUD
-							}
-#endif
-							for (char c : h_s.substr(2, h_s.find('`') - 2)) {
-								if ((c < 65 || c>122) && c != 46 && c != 126)apisender::error::DropError(apisender::error::ASE0001, "h_s");
-								else if (c > 90 && c < 97 && c != 95 && c != 126)apisender::error::DropError(apisender::error::ASE0001, "h_s");
-							}
-							
-							target_working = h_s.substr(h_s.find('`') +1 , h_s.size() - h_s.find('`'));
-							target_working = target_working.substr(0, target_working.size() - 1);
-							if (!ez && !silence)std::cout << target_spacename << " " << target_working << "\n";
-                            std::string re_ = apisender::runawork(jsonfile::readJsonFile(target_space), target_working, target_spacename, true);
-							//R.R.t_ => real T
-                            switch (R.R.t_){
-                                case apisender::_str:
-                                    req_json[h_] = re_;
-                                    break;
-                                case apisender::_int:
-                                    req_json[h_] = std::atoi(re_.c_str());
-                                    break;
-                                case apisender::_bool:
-									if (apisender::stringcompare(re_, "true")) {
-										req_json[h_] = true;
-									}
-									else {
-										req_json[h_] = false;
-									}
-                            }
-							if (!ez && !silence)std::cout << req_json[h_] << std::endl;
-						}
-
-					}
-#ifdef APISENDER_REMOTE_CLOUD
-					else if (h_s == "$(D)") {
-						if (cloud_.get_status()) {
-							req_json[h_] = cloud_.cloudconfig["raw"];
-						}					
-					}
-#endif 
-					else {
-						switch (R.R.t_) {
-						case apisender::_int:
-							req_json[h_] = R.R.int_;
-							break;
-						case apisender::_bool:
-							req_json[h_] = R.R.bool_;
-							break;
-						case apisender::_str:
-							req_json[h_] = R.R.str_;
-							break;
-						}
-					}
-				}
-
-				req = jsonfile::parse(req_json);
+				req = subwork_req(config_[working]["request"]["body"], workspace, cloud_);
 			}
 			else {
 				req = config_[working]["request"]["body"].asString();
