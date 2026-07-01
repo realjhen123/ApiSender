@@ -877,7 +877,19 @@ namespace apisender {
 	}
 
 }
-
+static void welcome() {
+	std::ifstream file("welcome");
+	if (!file) {
+		;
+	}
+	else {
+		std::string line;
+		while (std::getline(file, line)) {
+			std::cout << line << '\n';
+		}
+	}
+	std::remove("welcome");
+}
 static void showBanner(std::string workspace_, std::string working_) {
 	if (!ui)return;
 	std::cout << "workspace:\t" << workspace_ << std::endl
@@ -933,6 +945,7 @@ int main(int argc, char* argv[])
 	curl_global_init(CURL_GLOBAL_ALL);
 	apisender::error::initErrorInfo();
 	system("mkdir " APISENDER_PATH);
+
 	clearMonitor();
 	std::string workfile = APISENDER_PATH "/ApiSender.txt" , workname;
 	std::string working;
