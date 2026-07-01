@@ -645,11 +645,15 @@ namespace apisender {
 				target_spacename = target.substr(0, tag_runother);
 				if (target_spacename == "")target_spacename = workspace;
 
-				target_working = target.substr(tag_runother + 1, target.size() - 3);
+				target_working = target.substr(tag_runother + 1, target.size() - 1);
 				target_space = APISENDER_PATH;
 				target_space += "/";
 				target_space += target_spacename;
-				target_space += ".txt";
+				if (false);
+#ifdef APISENDER_REMOTE_CLOUD
+				else if (cloud_.get_status())target_space += ".json";
+#endif
+				else target_space += ".txt";
 
 				Json::Value subwork = jsonfile::readJsonFile(target_space);
 				down_h_s = apisender::runawork(subwork, target_working, target_space, true, cloud_);
@@ -670,16 +674,26 @@ namespace apisender {
 #endif 
 			if (h_s[0] == '<') {
 				int tag_small = h_s.find('>');
-				std::string type_in = h_s.substr(1, tag_small - 2);
-				if (type_in == "string" || type_in == "str") {
+				std::string type_in = h_s.substr(1, tag_small - 1);
+				int type_c = 0;
+				if (type_in == "string") {
 					type = "str";
+					type_c = 6;
+				}
+				else if (type_in == "str") {
+					type = "str";
+					type_c = 3;
 				}
 				else if (type_in == "int") {
 					type = "int";
+					type_c = 3;
 				}
 				else if (type_in == "bool") {
 					type = "bool";
+					type_c = 4;
 				}
+				type_c += 2;
+				down_h_s = down_h_s.substr(type_c);
 			}
 			if (type == "str") {
 				req_json[h_] = down_h_s;
