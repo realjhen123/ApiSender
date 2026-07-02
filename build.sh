@@ -5,3 +5,5 @@ mkdir build
 cd build
 cmake .. 
 make -j8
+cd ..
+ln -s build/compile_commands.json
