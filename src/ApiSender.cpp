@@ -622,6 +622,7 @@ namespace apisender {
 		return std::stoll(res.get("APISENDER_TIME_COUNT", -1).asString());
 	}
 #endif
+    int worktree = 0;
 	std::string subwork_req(Json::Value req,std::string workspace
 #ifdef APISENDER_REMOTE_CLOUD
 		, apisender::ASRCloud cloud_ = apisender::ASRCloud()
@@ -656,7 +657,9 @@ namespace apisender {
 				else target_space += ".txt";
 
 				Json::Value subwork = jsonfile::readJsonFile(target_space);
+                worktree ++;
 				down_h_s = apisender::runawork(subwork, target_working, target_space, true, cloud_);
+                worktree --;
 			}
 			else if (h_s.find("$(INPUT)") != std::string::npos) {
 				std::cout << "Input \"" << h_ << "\" >";
@@ -718,6 +721,10 @@ namespace apisender {
 #endif
 	) 
 	{
+        for (int i=0;i<worktree;i++){
+            std::cout << "  ";
+        }
+        std::cout << workspace << " " << working << "\n";
 		/*
 		*config_
 		* working
