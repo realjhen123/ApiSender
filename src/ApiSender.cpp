@@ -446,7 +446,7 @@ namespace apisender {
 	std::string runawork(Json::Value config_, std::string working, std::string workspace, bool silence, apisender::ASRCloud cloud_);
 	bool ASRCloud::get_status() { return usingcloud; };
 	std::string ASRCloud::get_cloudpath() {
-			std::string path = ".ApiSender";
+			std::string path = APISENDER_PATH;
 			path += "/";
 			path += cloudname;
 			return path;
