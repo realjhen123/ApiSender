@@ -662,6 +662,7 @@ namespace apisender {
                 worktree --;
 			}
 			else if (h_s.find("$(INPUT)") != std::string::npos) {
+                for (int i=0;i<worktree;i++)std::cout <<"  ";
 				std::cout << "Input \"" << h_ << "\" >";
 				std::string in;
 				std::getline(std::cin >> std::ws, in);
