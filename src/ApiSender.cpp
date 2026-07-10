@@ -416,7 +416,7 @@ namespace apisender {
 		void DropError(apisender::error::ErrorCode ecode, std::string rawcontent) {
 			std::cout << "\n\n\n===============\n";
 			std::cout << "We have some problem.\n";
-			std::cout << " ErrorLocation Debug:" << rawcontent << std::endl;
+			std::cout << "ErrorLocation Debug:" << rawcontent << std::endl;
 			std::cout << "Error Code:" << ecode;
 			std::cout << " " << apisender::error::ErrorInfo[ecode] << "\n";
 			std::abort();
@@ -644,7 +644,12 @@ namespace apisender {
 
 				int tag_runother = target.find('`');
 				target_spacename = target.substr(0, tag_runother);
-				if (target_spacename == "")target_spacename = workspace;
+                if (target_spacename == "" || target_spacename == "."){
+                    target_spacename = workspace;
+                }
+                else if (target_spacename == "~"){
+                    target_spacename = "Apisender.txt";
+                }
 
 				target_working = target.substr(tag_runother + 1, target.size() - 1);
 				target_space = APISENDER_PATH;
