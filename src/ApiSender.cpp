@@ -648,7 +648,7 @@ namespace apisender {
                     target_spacename = workspace;
                 }
                 else if (target_spacename == "~"){
-                    target_spacename = "Apisender.txt";
+                    target_spacename = "Apisender";
                 }
 
 				target_working = target.substr(tag_runother + 1, target.size() - 1);
