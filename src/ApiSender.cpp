@@ -345,6 +345,7 @@ namespace apisender {
 		apisender::Logger log;
 		std::mutex mtx;
 		int count = 0;
+		int target_c = 0;
 		stress_testing() {
 			this->config = jsonfile::readJsonFile(APISENDER_PATH "/stress.json");
 		}
@@ -364,22 +365,29 @@ namespace apisender {
 			curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, request.c_str());
 			curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CurlClient::WriteCallback);
 			curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response);
+			curl_easy_setopt(curl_, CURLOPT_HEADER, 0L);
 			while (status) {
 				curl_easy_perform(curl_);
 				{ 
 					std::lock_guard<std::mutex> guard(this->mtx);
 					this->count++;
+					if (this->config[working]["target"].asString() == "$NULL");
+					else if (this->config[working]["target"].asString() == response)
+						this->target_c++;
 				}
 				response = "";
 			}
+			curl_easy_cleanup(curl_);
 		}
 		void runPerSecond() {
 			
 			while (status) {
 				{
 					std::lock_guard<std::mutex> guard(this->mtx);
-					this->log.log(apisender::INFO, getReadableTime() + "\t" + "\tcount:" + std::to_string(this->count) + "\n");
+					this->log.log(apisender::INFO, getReadableTime() + "\t" + "\tcount:" + std::to_string(this->count)
+						+ "\tHit Target:" + std::to_string(this->target_c) + "\n");
 					this->count = 0;
+					this->target_c = 0;
 				}
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}
@@ -1291,6 +1299,7 @@ int main(int argc, char* argv[])
 						stress.config[nm]["request"] = request;
 					}
 					stress.config[nm]["url"] = url;
+					stress.config[nm]["target"] = "$NULL";
 
 					stress.save();
 					stress.log.logtype = apisender::INFO;
