@@ -341,7 +341,7 @@ namespace apisender {
 	public:
 		bool status = true;
 		Json::Value config;
-		int workers_number = 10;
+		int workers_number = 4;
 		apisender::Logger log;
 		std::mutex mtx;
 		int count = 0;
@@ -349,6 +349,7 @@ namespace apisender {
 			this->config = jsonfile::readJsonFile(APISENDER_PATH "/stress.json");
 		}
 		void save() {
+			this->config["stress_config"]["thread_number"] = 4;
 			jsonfile::writeJsonFile(APISENDER_PATH "/stress.json", this->config);
 		}
 		void RunF(std::string working) {
@@ -1228,6 +1229,7 @@ int main(int argc, char* argv[])
 			if (stress.config != Json::nullValue) {
 				std::vector<std::string> worklist = stress.config.getMemberNames();
 				for (const auto& w : worklist) {
+					if (w == "stress_config")continue;
 					std::cout << w << " \n";
 				}
 			}
@@ -1238,9 +1240,11 @@ int main(int argc, char* argv[])
 			stress.log.log(apisender::DEBUG, "stress.log printfunction print\n");
 			stress.log.log(apisender::LogType::WARN, "Tip:$() on stress mode is unsupport\n");
 			std::string working_stress;
-			stress.workers_number = 100;
+			int stress_nc = stress.config["stress_config"].get("thread_number", -1).asInt();
+			if (stress_nc == -1)
+				stress.workers_number = 4;
+			else stress.workers_number = stress_nc;
 			std::string command_2_1;
-
 			std::vector<std::thread> threads;
 			int thread_top = 0;
 			bool status =false;
